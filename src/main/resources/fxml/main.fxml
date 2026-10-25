@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+
+<BorderPane prefHeight="650.0" prefWidth="950.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="id.guruh.devlablm.ui.controller.MainLayoutController">
+
+    <!-- SIDEBAR KIRI (MENU NAVIGASI) -->
+    <left>
+        <VBox prefWidth="220.0" spacing="8.0" style="-fx-background-color: -color-bg-subtle; -fx-border-color: -color-border-muted; -fx-border-width: 0 1 0 0;">
+            <padding>
+                <Insets bottom="16.0" left="16.0" right="16.0" top="20.0" />
+            </padding>
+            <children>
+                <!-- Brand / Logo -->
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <children>
+                        <FontIcon iconLiteral="mdal-desktop_mac" iconSize="26" />
+                        <Label styleClass="title-4" text="DevLab LM" />
+                    </children>
+                    <VBox.margin>
+                        <Insets bottom="10.0" />
+                    </VBox.margin>
+                </HBox>
+
+                <Separator />
+
+                <Label styleClass="text-caption, text-muted" text="MENU UTAMA">
+                    <VBox.margin>
+                        <Insets top="8.0" />
+                    </VBox.margin>
+                </Label>
+
+                <!-- Tombol Navigasi Menu -->
+                <Button fx:id="navDashboardBtn" alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" onAction="#onNavDashboard" styleClass="flat" text="Dashboard">
+                    <graphic>
+                        <FontIcon iconLiteral="mdal-dashboard" iconSize="18" />
+                    </graphic>
+                </Button>
+
+                <Button fx:id="navWebStatusBtn" alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" onAction="#onNavWebStatus" styleClass="flat" text="Web &amp; API Status">
+                    <graphic>
+                        <FontIcon iconLiteral="mdmz-public" iconSize="18" />
+                    </graphic>
+                </Button>
+
+                <Button fx:id="navAiSettingsBtn" alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" onAction="#onNavAiSetting" styleClass="flat" text="AI Settings">
+                    <graphic>
+                        <FontIcon iconLiteral="mdmz-public" iconSize="18" />
+                    </graphic>
+                </Button>
+
+
+
+                <Button fx:id="navSettingsBtn" alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" onAction="#onNavSettings" styleClass="flat" text="Pengaturan">
+                    <graphic>
+                        <FontIcon iconLiteral="mdmz-settings" iconSize="18" />
+                    </graphic>
+                </Button>
+
+                <!-- Spacer dorong footer menu ke bawah -->
+                <Region VBox.vgrow="ALWAYS" />
+
+                <Separator />
+
+                <!-- Toggle Theme Dark / Light -->
+                <Button fx:id="themeToggleBtn" alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" onAction="#onToggleTheme" styleClass="button-outlined" text="Ganti Tema">
+                    <graphic>
+                        <FontIcon iconLiteral="mdmz-settings_brightness" iconSize="18" />
+                    </graphic>
+                </Button>
+            </children>
+        </VBox>
+    </left>
+
+    <!-- CONTENT AREA TENGAH (TEMPAT HALAMAN BERGANTI-GANTI) -->
+    <center>
+        <StackPane fx:id="contentArea" style="-fx-background-color: -color-bg-default;">
+            <padding>
+                <Insets bottom="20.0" left="24.0" right="24.0" top="20.0" />
+            </padding>
+        </StackPane>
+    </center>
+
+</BorderPane>

@@ -1,0 +1,35 @@
+/* ===== Area kartu ===== */
+.cards-area {
+    -fx-background-color: transparent;
+    -fx-border-color: -color-border-default;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+}
+.cards-area > .viewport {
+    -fx-background-color: transparent;
+}
+.cards-grid {
+    -fx-background-color: transparent;
+}
+
+/* ===== Kartu proyek ===== */
+.project-card {
+    -fx-background-color: -color-bg-subtle;
+    -fx-border-color: -color-border-default;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+}
+.project-card:hover {
+    -fx-border-color: -color-accent-emphasis;
+}
+.project-card-add {
+    -fx-border-style: segments(8, 6);
+    -fx-background-color: transparent;
+}
+.card-plus {
+    -fx-font-size: 36px;
+    -fx-text-fill: -color-accent-fg;
+}

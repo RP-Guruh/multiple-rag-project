@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox spacing="18.0" xmlns="http://javafx.com/javafx/23"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="id.guruh.devlablm.ui.controller.AiSettingController">
+
+    <!-- Header Page -->
+    <VBox spacing="4.0">
+        <Label styleClass="title-2" text="Pengaturan &amp; Koneksi ke AI LLM" />
+        <Label styleClass="text-muted" text="Konfigurasikan AI Endpoint, API Key, dan nama model AI yang anda gunakan." />
+    </VBox>
+
+
+
+</VBox>
