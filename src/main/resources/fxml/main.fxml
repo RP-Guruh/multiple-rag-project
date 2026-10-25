@@ -40,19 +40,11 @@
                     </graphic>
                 </Button>
 
-                <Button fx:id="navWebStatusBtn" alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" onAction="#onNavWebStatus" styleClass="flat" text="Web &amp; API Status">
-                    <graphic>
-                        <FontIcon iconLiteral="mdmz-public" iconSize="18" />
-                    </graphic>
-                </Button>
-
                 <Button fx:id="navAiSettingsBtn" alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" onAction="#onNavAiSetting" styleClass="flat" text="AI Settings">
                     <graphic>
                         <FontIcon iconLiteral="mdmz-public" iconSize="18" />
                     </graphic>
                 </Button>
-
-
 
                 <Button fx:id="navSettingsBtn" alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" onAction="#onNavSettings" styleClass="flat" text="Pengaturan">
                     <graphic>

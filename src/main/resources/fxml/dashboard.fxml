@@ -11,7 +11,7 @@
       fx:controller="id.guruh.devlablm.ui.controller.DashboardController">
 
     <VBox spacing="4.0">
-        <Label styleClass="title-2" text="Projects" />
+        <Label styleClass="title-2" text="Dashboard" />
         <Label styleClass="text-muted" text="Manage your chatbot projects and train them with new knowledge." />
     </VBox>
 

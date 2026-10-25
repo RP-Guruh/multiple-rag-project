@@ -7,13 +7,12 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.control.Alert;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.control.TextInputDialog;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -123,10 +122,24 @@ public class DashboardController {
 
     // membuat project baru
     private void onAddProject() {
-        // TODO: tampilkan dialog nama proyek, simpan lewat appService, lalu refreshCards()
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Add New Project");
+        dialog.setHeaderText("Create a new chatbot project");
+        dialog.setContentText("Project name:");
+        dialog.initOwner(cardGrid.getScene().getWindow());
+
+        dialog.showAndWait()
+              .map(String::trim)
+              .filter(name -> !name.isEmpty())
+              .ifPresent(name -> {
+                  // TODO: simpan lewat appService, lalu refresh kartu
+                  // appService.createProject(name);
+                  // refreshCards();
+                  System.out.println("Project baru: " + name);
+              });
     }
 
-    // membuka project exisiting
+    // membuka project existing
     private void onOpenProject(String name) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Project");

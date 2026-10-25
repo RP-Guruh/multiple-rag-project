@@ -23,9 +23,6 @@ public class MainLayoutController {
     private Button navDashboardBtn;
 
     @FXML
-    private Button navWebStatusBtn;
-
-    @FXML
     private Button navSettingsBtn;
 
     @FXML
@@ -50,11 +47,6 @@ public class MainLayoutController {
     }
 
     @FXML
-    public void onNavWebStatus() {
-        switchPage("/fxml/web-status.fxml", navWebStatusBtn);
-    }
-
-    @FXML
     public void onNavAiSetting() {
         switchPage("/fxml/ai-settings.fxml", navAiSettingsBtn);
     }
@@ -75,8 +67,8 @@ public class MainLayoutController {
 
     private void resetNavStyles() {
         navDashboardBtn.getStyleClass().remove("accent");
-        navWebStatusBtn.getStyleClass().remove("accent");
         navSettingsBtn.getStyleClass().remove("accent");
+        navAiSettingsBtn.getStyleClass().remove("accent");
     }
 
     @FXML
