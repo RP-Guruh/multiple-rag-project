@@ -36,3 +36,8 @@ build/
 *application*.properties
 technical.md
 
+# Local runtime data & SQLite database
+data/
+*.db
+
+
