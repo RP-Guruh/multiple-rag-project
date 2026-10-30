@@ -39,10 +39,14 @@
                         <FontIcon iconLiteral="mdal-dashboard" iconSize="18" />
                     </graphic>
                 </Button>
-
-                <Button fx:id="navAiSettingsBtn" alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" onAction="#onNavAiSetting" styleClass="flat" text="AI Settings">
+                <Button fx:id="navAiSettingsBtn" alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" onAction="#onNavAiSetting" styleClass="flat" text="AI Setting">
                     <graphic>
-                        <FontIcon iconLiteral="mdmz-public" iconSize="18" />
+                        <FontIcon iconLiteral="mdmz-sentiment_very_satisfied" iconSize="18" />
+                    </graphic>
+                </Button>
+                <Button fx:id="navDatabaseSettingsBtn" alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" onAction="#onNavDatabaseSetting" styleClass="flat" text="Database Setting">
+                    <graphic>
+                        <FontIcon iconLiteral="mdmz-storage" iconSize="18" />
                     </graphic>
                 </Button>
 

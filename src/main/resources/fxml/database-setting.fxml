@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import atlantafx.base.controls.PasswordTextField?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="18.0" xmlns="http://javafx.com/javafx/23"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="id.guruh.devlablm.ui.controller.DatabaseSettingController">
+
+    <!-- Header Page -->
+    <VBox spacing="4.0">
+        <Label styleClass="title-2" text="Pengaturan &amp; Koneksi Database Postgres" />
+        <Label styleClass="text-muted" text="Atur host, port, nama database, serta kredensial yang digunakan untuk terhubung ke database PostgreSQL." />
+    </VBox>
+
+    <VBox spacing="12.0">
+
+        <!-- Host & Port -->
+        <HBox spacing="12.0">
+            <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                <Label text="Host" />
+                <TextField fx:id="hostField" promptText="localhost" />
+            </VBox>
+            <VBox spacing="4.0" prefWidth="120.0">
+                <Label text="Port" />
+                <TextField fx:id="portField" promptText="5432" />
+            </VBox>
+        </HBox>
+
+        <!-- Database -->
+        <VBox spacing="4.0">
+            <Label text="Nama Database" />
+            <TextField fx:id="databaseField" promptText="mydb" />
+        </VBox>
+
+        <!-- Username & Password -->
+        <HBox spacing="12.0">
+            <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                <Label text="Username" />
+                <TextField fx:id="usernameField" promptText="postgres" />
+            </VBox>
+            <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                <Label text="Password" />
+                <PasswordTextField fx:id="passwordField" />
+            </VBox>
+        </HBox>
+
+        <!-- Schema (opsional) -->
+        <VBox spacing="4.0">
+            <Label text="Schema (opsional)" />
+            <TextField fx:id="schemaField" promptText="public" />
+        </VBox>
+
+        <!-- SSL -->
+        <CheckBox fx:id="sslCheck" text="Gunakan SSL" />
+
+        <!-- Tombol -->
+        <HBox spacing="8.0" alignment="CENTER_RIGHT">
+            <Button text="Test Connection" styleClass="button-outlined" onAction="#handleTestConnection" />
+            <Button text="Save" accessibleHelp="Save Database Configure" styleClass="accent" onAction="#handleSave" />
+        </HBox>
+
+        <Label fx:id="statusLabel" wrapText="true" />
+    </VBox>
+
+</VBox>

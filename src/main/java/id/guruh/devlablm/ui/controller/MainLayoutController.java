@@ -39,6 +39,9 @@ public class MainLayoutController {
     private Button navSettingsBtn;
 
     @FXML
+    private Button navDatabaseSettingsBtn;
+
+    @FXML
     private Button themeToggleBtn;
 
     private boolean isDarkMode = false;
@@ -71,6 +74,9 @@ public class MainLayoutController {
     public void onNavSettings() {
         switchPage("/fxml/settings.fxml", navSettingsBtn);
     }
+
+    @FXML
+    public void onNavDatabaseSetting(){ switchPage("/fxml/database-setting.fxml", navDatabaseSettingsBtn); }
 
     @FXML
     public void onToggleTheme() {
@@ -129,7 +135,7 @@ public class MainLayoutController {
     }
 
     private void resetNavStyles() {
-        List<Button> buttons = List.of(navDashboardBtn, navAiSettingsBtn, navSettingsBtn);
+        List<Button> buttons = List.of(navDashboardBtn, navAiSettingsBtn, navSettingsBtn, navDatabaseSettingsBtn);
         for (Button btn : buttons) {
             btn.getStyleClass().remove("accent");
         }
