@@ -2,6 +2,8 @@ package id.guruh.devlablm.ui.controller;
 
 import atlantafx.base.controls.PasswordTextField;
 import atlantafx.base.theme.Styles;
+import id.guruh.devlablm.postgres.service.PostgresConnectionService;
+import id.guruh.devlablm.sqlite.entity.DatabaseSetting;
 import id.guruh.devlablm.sqlite.service.DatabaseSettingService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -22,6 +24,7 @@ import java.util.Properties;
 public class DatabaseSettingController {
 
     private final DatabaseSettingService service;
+    private final PostgresConnectionService postgresConnectionService;
 
     @FXML private TextField hostField;
     @FXML private TextField portField;
@@ -32,8 +35,9 @@ public class DatabaseSettingController {
     @FXML private CheckBox sslCheck;
     @FXML private Label statusLabel;
 
-    public DatabaseSettingController(DatabaseSettingService service) {
+    public DatabaseSettingController(DatabaseSettingService service, PostgresConnectionService postgresConnectionService) {
         this.service = service;
+        this.postgresConnectionService = postgresConnectionService;
     }
 
     @FXML
@@ -69,7 +73,7 @@ public class DatabaseSettingController {
         }
 
         try {
-            service.save(
+            DatabaseSetting saved = service.save(
                     hostField.getText().trim(),
                     Integer.parseInt(portField.getText().trim()),
                     databaseField.getText().trim(),
@@ -78,7 +82,13 @@ public class DatabaseSettingController {
                     schemaField.getText().trim(),
                     sslCheck.isSelected()
             );
-            showStatus("Pengaturan database berhasil disimpan", true);
+
+            try {
+                postgresConnectionService.configureAndMigrate(saved);
+                showStatus("Pengaturan berhasil disimpan dan database PostgreSQL berhasil terhubung & dimigrasi", true);
+            } catch (Exception e) {
+                showStatus("Pengaturan tersimpan di SQLite, tapi koneksi PostgreSQL gagal: " + e.getMessage(), false);
+            }
         } catch (Exception e) {
             statusLabel.setText("");
             new Alert(Alert.AlertType.ERROR,

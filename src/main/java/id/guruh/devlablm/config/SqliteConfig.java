@@ -25,7 +25,7 @@ import java.util.Map;
         entityManagerFactoryRef = "sqliteEntityManagerFactory",
         transactionManagerRef = "sqliteTransactionManager"
 )
-public class sqliteConfig {
+public class SqliteConfig {
 
     @Bean
     @ConfigurationProperties("app.datasource.sqlite")

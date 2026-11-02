@@ -1,24 +1,28 @@
 package id.guruh.devlablm.ui.controller;
 
-import id.guruh.devlablm.service.AppService;
+import id.guruh.devlablm.postgres.entity.ProjectEntity;
+import id.guruh.devlablm.postgres.service.ProjectService;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.control.Alert;
-import javafx.scene.control.TextInputDialog;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -28,20 +32,20 @@ public class DashboardController {
     private static final double GAP = 16;
     private static final double PADDING = 32; // padding kiri + kanan pada grid
 
-    private final AppService appService;
+    private static final DateTimeFormatter DATE_FMT =
+            DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.forLanguageTag("id-ID"))
+                    .withZone(ZoneId.systemDefault());
 
-    @FXML
-    private ScrollPane scrollPane;
+    private final ProjectService projectService;
 
-    @FXML
-    private GridPane cardGrid;
+    @FXML private ScrollPane scrollPane;
+    @FXML private GridPane cardGrid;
 
     private final List<Node> cards = new ArrayList<>();
     private int currentColumns = -1;
 
-    // Dependency Injection dari Spring Boot
-    public DashboardController(AppService appService) {
-        this.appService = appService;
+    public DashboardController(ProjectService projectService) {
+        this.projectService = projectService;
     }
 
     @FXML
@@ -53,22 +57,38 @@ public class DashboardController {
 
     private void refreshCards() {
         cards.clear();
-        cards.add(createAddCard());
 
-        // TODO: ganti dengan method asli di AppService
-        // for (Project p : appService.findAllProjects()) {
-        //     cards.add(createProjectCard(p.getName(), p.getDocCount()));
-        // }
-
-        // Data contoh sementara, hapus kalau service sudah siap
-        for (int i = 1; i <= 100; i++) {
-            cards.add(createProjectCard("Project " + i, i * 3));
+        try {
+            List<ProjectEntity> projects = projectService.findAll();
+            cards.add(createAddCard());
+            for (ProjectEntity p : projects) {
+                String created = p.getCreatedAt() == null ? "-" : DATE_FMT.format(p.getCreatedAt());
+                cards.add(createProjectCard(p.getName(), created));
+            }
+        } catch (Exception e) {
+            cards.clear();
+            cards.add(createDatabaseNotReadyCard());
         }
 
-        currentColumns = -1; // paksa susun ulang
+        currentColumns = -1;
         relayout(scrollPane.getViewportBounds().getWidth());
     }
 
+    private VBox createDatabaseNotReadyCard() {
+        Label title = new Label("Database belum diatur");
+        title.getStyleClass().add("title-4");
+        Label info = new Label("Atur koneksi PostgreSQL di menu Database Setting, lalu buka kembali Dashboard.");
+        info.getStyleClass().add("text-muted");
+        info.setWrapText(true);
+
+        VBox card = new VBox(6, title, info);
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.setPadding(new Insets(16));
+        card.setPrefHeight(140);
+        card.setMaxWidth(Double.MAX_VALUE);
+        card.getStyleClass().add("project-card");
+        return card;
+    }
     private void relayout(double width) {
         if (width <= 0) return;
 
@@ -107,10 +127,10 @@ public class DashboardController {
         return card;
     }
 
-    private VBox createProjectCard(String name, int docCount) {
+    private VBox createProjectCard(String name, String created) {
         Label title = new Label(name);
         title.getStyleClass().add("title-4");
-        Label info = new Label(docCount + " documents");
+        Label info = new Label(created);
         info.getStyleClass().add("text-muted");
 
         VBox card = new VBox(6, title, info);
@@ -123,7 +143,6 @@ public class DashboardController {
         return card;
     }
 
-    // membuat project baru
     private void onAddProject() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Add New Project");
@@ -132,14 +151,19 @@ public class DashboardController {
         dialog.initOwner(cardGrid.getScene().getWindow());
 
         dialog.showAndWait()
-              .map(String::trim)
-              .filter(name -> !name.isEmpty())
-              .ifPresent(name -> {
-                  // TODO: simpan lewat appService, lalu refresh kartu
-                  // appService.createProject(name);
-                  // refreshCards();
-                  System.out.println("Project baru: " + name);
-              });
+                .map(String::trim)
+                .filter(name -> !name.isEmpty())
+                .ifPresent(name -> {
+                    try {
+                        projectService.create(name, null, null);
+                        refreshCards();
+                    } catch (IllegalArgumentException ex) {
+                        showError(ex.getMessage());
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        showError("Gagal membuat project. Periksa koneksi database.");
+                    }
+                });
     }
 
     // membuka project existing
@@ -152,5 +176,9 @@ public class DashboardController {
         alert.showAndWait();
     }
 
-
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR, message);
+        alert.initOwner(cardGrid.getScene().getWindow());
+        alert.showAndWait();
+    }
 }
