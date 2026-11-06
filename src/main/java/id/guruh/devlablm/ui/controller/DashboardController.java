@@ -2,10 +2,12 @@ package id.guruh.devlablm.ui.controller;
 
 import id.guruh.devlablm.postgres.entity.ProjectEntity;
 import id.guruh.devlablm.postgres.service.ProjectService;
+import id.guruh.devlablm.ui.FxmlViewLoader;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -14,6 +16,7 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -37,6 +40,7 @@ public class DashboardController {
                     .withZone(ZoneId.systemDefault());
 
     private final ProjectService projectService;
+    private final FxmlViewLoader fxmlViewLoader;
 
     @FXML private ScrollPane scrollPane;
     @FXML private GridPane cardGrid;
@@ -44,8 +48,9 @@ public class DashboardController {
     private final List<Node> cards = new ArrayList<>();
     private int currentColumns = -1;
 
-    public DashboardController(ProjectService projectService) {
+    public DashboardController(ProjectService projectService, FxmlViewLoader fxmlViewLoader) {
         this.projectService = projectService;
+        this.fxmlViewLoader = fxmlViewLoader;
     }
 
     @FXML
@@ -63,7 +68,7 @@ public class DashboardController {
             cards.add(createAddCard());
             for (ProjectEntity p : projects) {
                 String created = p.getCreatedAt() == null ? "-" : DATE_FMT.format(p.getCreatedAt());
-                cards.add(createProjectCard(p.getName(), created));
+                cards.add(createProjectCard(p, created));
             }
         } catch (Exception e) {
             cards.clear();
@@ -127,8 +132,8 @@ public class DashboardController {
         return card;
     }
 
-    private VBox createProjectCard(String name, String created) {
-        Label title = new Label(name);
+    private VBox createProjectCard(ProjectEntity project, String created) {
+        Label title = new Label(project.getName());
         title.getStyleClass().add("title-4");
         Label info = new Label(created);
         info.getStyleClass().add("text-muted");
@@ -139,7 +144,7 @@ public class DashboardController {
         card.setPrefHeight(140);
         card.setMaxWidth(Double.MAX_VALUE);
         card.getStyleClass().add("project-card");
-        card.setOnMouseClicked(e -> onOpenProject(name));
+        card.setOnMouseClicked(e -> onOpenProject(project));
         return card;
     }
 
@@ -166,14 +171,31 @@ public class DashboardController {
                 });
     }
 
-    // membuka project existing
-    private void onOpenProject(String name) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Project");
-        alert.setHeaderText(name);
-        alert.setContentText("Membuka proyek: " + name);
-        alert.initOwner(cardGrid.getScene().getWindow());
-        alert.showAndWait();
+    // membuka project existing di window baru
+    private void onOpenProject(ProjectEntity project) {
+        try {
+            Stage stage = new Stage();
+            FxmlViewLoader.ViewNode node = fxmlViewLoader.loadView("/fxml/project-detail.fxml");
+            if (node.controller() instanceof ProjectDetailController detailController) {
+                detailController.initProject(project, this::refreshCards);
+            }
+
+            Scene scene = new Scene(node.root(), 1200, 780);
+            String cssUrl = fxmlViewLoader.resolveCssUrl("/css/app.css");
+            if (!cssUrl.isEmpty()) {
+                scene.getStylesheets().add(cssUrl);
+            }
+
+            stage.setTitle("DevLab LM Studio - Project: " + project.getName());
+            stage.setMinWidth(960);
+            stage.setMinHeight(640);
+            stage.setScene(scene);
+            stage.centerOnScreen();
+            stage.show();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showError("Gagal membuka window project: " + ex.getMessage());
+        }
     }
 
     private void showError(String message) {
