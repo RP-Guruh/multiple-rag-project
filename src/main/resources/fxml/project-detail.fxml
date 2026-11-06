@@ -28,17 +28,13 @@
     <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="project-detail-header">
         <FontIcon iconLiteral="mdal-description" iconSize="30" />
         <VBox spacing="2.0">
-            <Label fx:id="lblHeaderTitle" styleClass="title-2, text-bold" text="Project Detail" />
+            <Label fx:id="lblHeaderTitle" styleClass="title-2, text-bold" text="Project Details" />
             <Label fx:id="lblHeaderSubtitle" styleClass="text-muted, text-small"
-                   text="Pengaturan Deskripsi, System Prompt, RAG Knowledge Base, dan Training AI" />
+                   text="Configure project metadata, system prompt, knowledge base, and vector embeddings" />
         </VBox>
         <Region HBox.hgrow="ALWAYS" />
-        <Button fx:id="btnHeaderSave" onAction="#onSaveProject" styleClass="accent" text="Simpan Pengaturan">
-            <graphic>
-                <FontIcon iconLiteral="mdmz-save" iconSize="16" />
-            </graphic>
-        </Button>
-        <Button fx:id="btnHeaderTrain" onAction="#onStartTraining" styleClass="success" text="Mulai Training AI">
+
+        <Button fx:id="btnHeaderTrain" onAction="#onStartTraining" styleClass="success" text="Start Training">
             <graphic>
                 <FontIcon iconLiteral="mdmz-model_training" iconSize="16" />
             </graphic>
@@ -47,7 +43,7 @@
 
     <!-- Main Split Layout -->
     <SplitPane dividerPositions="0.36" VBox.vgrow="ALWAYS">
-        <!-- Panel Kiri: Pengaturan Project & System Prompt -->
+        <!-- Left Panel: Project Settings & System Prompt -->
         <VBox spacing="14.0">
             <padding>
                 <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
@@ -55,33 +51,33 @@
             <VBox spacing="12.0" styleClass="detail-card" VBox.vgrow="ALWAYS">
                 <HBox alignment="CENTER_LEFT" spacing="8.0">
                     <FontIcon iconLiteral="mdmz-tune" iconSize="18" />
-                    <Label styleClass="title-4, text-bold" text="Konfigurasi Project &amp; Prompt" />
+                    <Label styleClass="title-4, text-bold" text="Project &amp; Prompt Settings" />
                 </HBox>
                 <Separator />
 
                 <VBox spacing="6.0">
-                    <Label styleClass="text-bold" text="Nama Project" />
-                    <TextField fx:id="nameField" promptText="Masukkan nama project..." />
+                    <Label styleClass="text-bold" text="Project Name" />
+                    <TextField fx:id="nameField" promptText="Enter project name..." />
                 </VBox>
 
                 <VBox spacing="6.0">
-                    <Label styleClass="text-bold" text="Deskripsi Project" />
-                    <TextArea fx:id="descriptionArea" prefRowCount="3" promptText="Jelaskan deskripsi atau tujuan project RAG ini..." wrapText="true" />
+                    <Label styleClass="text-bold" text="Description" />
+                    <TextArea fx:id="descriptionArea" prefRowCount="3" promptText="Describe the project scope and retrieval objectives..." wrapText="true" />
                 </VBox>
 
                 <VBox spacing="6.0" VBox.vgrow="ALWAYS">
                     <HBox alignment="CENTER_LEFT">
-                        <Label styleClass="text-bold" text="System Prompt AI" />
+                        <Label styleClass="text-bold" text="System Prompt" />
                         <Region HBox.hgrow="ALWAYS" />
                         <Label styleClass="text-muted, text-small" text="Persona &amp; Rules" />
                     </HBox>
-                    <TextArea fx:id="systemPromptArea" prefRowCount="11" promptText="Contoh:&#10;Anda adalah asisten AI cerdas untuk layanan pelanggan.&#10;Jawablah pertanyaan pengguna hanya berdasarkan data pengetahuan (RAG) yang disediakan.&#10;Jika jawaban tidak terdapat di dokumen, sampaikan dengan sopan bahwa informasi belum tersedia." styleClass="prompt-area" wrapText="true" VBox.vgrow="ALWAYS" />
-                    <Label styleClass="text-muted, text-small" text="💡 System prompt menentukan persona dan instruksi utama AI sebelum membaca konteks dokumen RAG." wrapText="true" />
+                    <TextArea fx:id="systemPromptArea" prefRowCount="11" promptText="Example:&#10;You are a customer support AI assistant.&#10;Answer user questions strictly based on the provided knowledge base context.&#10;If the context does not contain the answer, politely state that the information is unavailable." styleClass="prompt-area" wrapText="true" VBox.vgrow="ALWAYS" />
+                    <Label styleClass="text-muted, text-small" text="💡 The system prompt defines AI persona and behavior before RAG document context is injected." wrapText="true" />
                 </VBox>
 
                 <HBox alignment="CENTER_RIGHT" spacing="10.0">
                     <Label fx:id="lblSaveStatus" styleClass="text-muted, text-small" />
-                    <Button fx:id="btnSaveLeft" onAction="#onSaveProject" styleClass="accent" text="Simpan Perubahan">
+                    <Button fx:id="btnSaveLeft" onAction="#onSaveProject" styleClass="accent" text="Save Changes">
                         <graphic>
                             <FontIcon iconLiteral="mdmz-save" iconSize="16" />
                         </graphic>
@@ -90,15 +86,15 @@
             </VBox>
         </VBox>
 
-        <!-- Panel Kanan: Upload RAG, Tab Riwayat Dokumen & Training AI -->
+        <!-- Right Panel: Knowledge Base, Document List & Training Pipeline -->
         <VBox spacing="14.0">
             <padding>
                 <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
             </padding>
 
             <TabPane fx:id="mainTabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
-                <!-- TAB 1: Basis Pengetahuan RAG (Upload & Riwayat Dokumen) -->
-                <Tab text="Basis Pengetahuan (RAG)">
+                <!-- TAB 1: Knowledge Base Documents -->
+                <Tab text="Knowledge Base">
                     <graphic>
                         <FontIcon iconLiteral="mdal-cloud_upload" iconSize="16" />
                     </graphic>
@@ -108,40 +104,40 @@
                                 <Insets bottom="12.0" left="12.0" right="12.0" top="14.0" />
                             </padding>
 
-                            <!-- Card Upload Dokumen RAG -->
+                            <!-- Document Upload Card -->
                             <VBox spacing="12.0" styleClass="detail-card">
                                 <HBox alignment="CENTER_LEFT" spacing="8.0">
                                     <FontIcon iconLiteral="mdal-cloud_upload" iconSize="18" />
-                                    <Label styleClass="title-4, text-bold" text="Upload Dokumen Pengetahuan (RAG)" />
+                                    <Label styleClass="title-4, text-bold" text="Upload Documents" />
                                     <Region HBox.hgrow="ALWAYS" />
-                                    <Label styleClass="text-muted, text-small" text="Bebas: PDF, Excel, Word, Text" />
+                                    <Label styleClass="text-muted, text-small" text="Supported: PDF, Excel, Word, Text" />
                                 </HBox>
 
                                 <!-- Dropzone Box -->
                                 <VBox fx:id="dropZone" alignment="CENTER" onMouseClicked="#onBrowseFiles" spacing="8.0" styleClass="dropzone">
                                     <FontIcon iconLiteral="mdal-cloud_upload" iconSize="36" />
-                                    <Label styleClass="text-bold" text="Tarik &amp; Lepas dokumen ke sini, atau klik untuk memilih berkas" />
-                                    <Label styleClass="text-muted, text-small" text="Mendukung berbagai format dokumen pengetahuan:" />
+                                    <Label styleClass="text-bold" text="Drag and drop documents here, or click to browse" />
+                                    <Label styleClass="text-muted, text-small" text="Supported formats:" />
                                     <HBox alignment="CENTER" spacing="8.0">
                                         <Label styleClass="badge-tag, badge-pdf" text="PDF (.pdf)" />
                                         <Label styleClass="badge-tag, badge-word" text="Word (.docx, .doc)" />
                                         <Label styleClass="badge-tag, badge-excel" text="Excel (.xlsx, .xls)" />
-                                        <Label styleClass="badge-tag, badge-text" text="Text Bebas (.txt, .md, .csv)" />
+                                        <Label styleClass="badge-tag, badge-text" text="Plain Text (.txt, .md, .csv)" />
                                     </HBox>
-                                    <Button fx:id="btnBrowseFiles" onAction="#onBrowseFiles" text="Pilih Berkas Dokumen...">
+                                    <Button fx:id="btnBrowseFiles" onAction="#onBrowseFiles" text="Browse Files...">
                                         <graphic>
                                             <FontIcon iconLiteral="mdal-folder_open" iconSize="16" />
                                         </graphic>
                                     </Button>
                                 </VBox>
 
-                                <!-- Area Antrian Berkas (Jika ada file dipilih) -->
+                                <!-- Queue List -->
                                 <VBox fx:id="queueContainer" managed="false" spacing="8.0" visible="false">
-                                    <Label styleClass="text-bold, text-small" text="Berkas Terpilih Siap Diunggah:" />
+                                    <Label styleClass="text-bold, text-small" text="Selected Files Ready for Upload:" />
                                     <ListView fx:id="queueListView" prefHeight="90.0" />
                                     <HBox alignment="CENTER_RIGHT" spacing="10.0">
-                                        <Button fx:id="btnClearQueue" onAction="#onClearQueue" text="Batalkan Pilihan" />
-                                        <Button fx:id="btnUploadQueue" onAction="#onUploadQueue" styleClass="accent" text="Unggah ke Knowledge Base">
+                                        <Button fx:id="btnClearQueue" onAction="#onClearQueue" text="Clear Selection" />
+                                        <Button fx:id="btnUploadQueue" onAction="#onUploadQueue" styleClass="accent" text="Upload to Knowledge Base">
                                             <graphic>
                                                 <FontIcon iconLiteral="mdal-file_upload" iconSize="16" />
                                             </graphic>
@@ -152,13 +148,13 @@
                                 <Label fx:id="lblUploadFeedback" styleClass="text-muted, text-small" />
                             </VBox>
 
-                            <!-- Card Riwayat Dokumen Knowledge Base -->
+                            <!-- Document Table Card -->
                             <VBox spacing="12.0" styleClass="detail-card">
                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                                     <FontIcon iconLiteral="mdal-history" iconSize="18" />
-                                    <Label styleClass="title-4, text-bold" text="Riwayat Dokumen Terdaftar" />
+                                    <Label styleClass="title-4, text-bold" text="Indexed Documents" />
                                     <Region HBox.hgrow="ALWAYS" />
-                                    <TextField fx:id="searchDocField" prefWidth="180.0" promptText="Cari nama dokumen..." />
+                                    <TextField fx:id="searchDocField" prefWidth="180.0" promptText="Search documents..." />
                                     <ComboBox fx:id="typeFilterCombo" prefWidth="130.0" />
                                     <Button fx:id="btnRefreshTable" onAction="#onRefreshTable">
                                         <graphic>
@@ -169,32 +165,27 @@
 
                                 <TableView fx:id="knowledgeTable" prefHeight="230.0">
                                     <columns>
-                                        <TableColumn fx:id="colFileName" prefWidth="240.0" text="Nama Dokumen" />
+                                        <TableColumn fx:id="colFileName" prefWidth="240.0" text="Document Name" />
                                         <TableColumn fx:id="colFileType" prefWidth="80.0" text="Format" />
-                                        <TableColumn fx:id="colFileSize" prefWidth="80.0" text="Ukuran" />
-                                        <TableColumn fx:id="colChunkCount" prefWidth="105.0" text="Jumlah Vektor" />
-                                        <TableColumn fx:id="colUploadedAt" prefWidth="135.0" text="Waktu Unggah" />
-                                        <TableColumn fx:id="colStatus" prefWidth="110.0" text="Status RAG" />
+                                        <TableColumn fx:id="colFileSize" prefWidth="80.0" text="Size" />
+                                        <TableColumn fx:id="colChunkCount" prefWidth="105.0" text="Vector Chunks" />
+                                        <TableColumn fx:id="colUploadedAt" prefWidth="135.0" text="Uploaded At" />
+                                        <TableColumn fx:id="colStatus" prefWidth="110.0" text="Status" />
                                     </columns>
                                 </TableView>
 
                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                                     <Label fx:id="lblKnowledgeSummary" styleClass="text-muted, text-small"
-                                           text="Total: 4 Dokumen | 428 Vektor Chunk | Terakhir Dilatih: 06 Nov 2026 14:30" />
+                                           text="Total: 4 Documents | 428 Vector Chunks | Last Trained: Nov 06, 2026 14:30" />
                                     <Region HBox.hgrow="ALWAYS" />
-                                    <Button fx:id="btnQuickTrain" onAction="#onStartTraining" styleClass="success" text="Training AI dari Dokumen Ini">
-                                        <graphic>
-                                            <FontIcon iconLiteral="mdmz-model_training" iconSize="16" />
-                                        </graphic>
-                                    </Button>
                                 </HBox>
                             </VBox>
                         </VBox>
                     </ScrollPane>
                 </Tab>
 
-                <!-- TAB 2: Training AI & Log Aktivitas -->
-                <Tab text="Training AI &amp; Status Vektor">
+                <!-- TAB 2: Training & Embeddings Pipeline -->
+                <Tab text="Training &amp; Embeddings">
                     <graphic>
                         <FontIcon iconLiteral="mdmz-model_training" iconSize="16" />
                     </graphic>
@@ -207,12 +198,12 @@
                             <HBox alignment="CENTER_LEFT" spacing="12.0">
                                 <FontIcon iconLiteral="mdmz-model_training" iconSize="32" />
                                 <VBox spacing="3.0">
-                                    <Label styleClass="title-4, text-bold" text="Pipeline Training Dokumen RAG" />
+                                    <Label styleClass="title-4, text-bold" text="RAG Training &amp; Embedding Pipeline" />
                                     <Label styleClass="text-muted, text-small"
-                                           text="Mengekstraksi teks dokumen, membagi potongan chunk, membuat embedding vektor, dan mengindeks ke pgvector." />
+                                           text="Extracts document text, splits content into semantic chunks, generates vector embeddings, and indexes into pgvector." />
                                 </VBox>
                                 <Region HBox.hgrow="ALWAYS" />
-                                <Button fx:id="btnTabStartTraining" onAction="#onStartTraining" prefHeight="38.0" styleClass="success" text="Mulai Training AI">
+                                <Button fx:id="btnTabStartTraining" onAction="#onStartTraining" prefHeight="38.0" styleClass="success" text="Start Training">
                                     <graphic>
                                         <FontIcon iconLiteral="mdmz-model_training" iconSize="18" />
                                     </graphic>
@@ -221,8 +212,8 @@
                             <Separator />
                             <VBox spacing="8.0">
                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
-                                    <Label styleClass="text-bold" text="Status Pelatihan:" />
-                                    <Label fx:id="lblTrainingStatusBadge" styleClass="badge-status-trained" text="Siap Ditraining" />
+                                    <Label styleClass="text-bold" text="Pipeline Status:" />
+                                    <Label fx:id="lblTrainingStatusBadge" styleClass="badge-status-trained" text="Ready" />
                                     <Region HBox.hgrow="ALWAYS" />
                                     <Label fx:id="lblTrainingPercent" styleClass="text-muted, text-small" text="0%" />
                                 </HBox>
@@ -232,9 +223,9 @@
 
                         <VBox spacing="8.0" styleClass="detail-card" VBox.vgrow="ALWAYS">
                             <HBox alignment="CENTER_LEFT" spacing="10.0">
-                                <Label styleClass="text-bold" text="Log Aktivitas Ekstraksi &amp; Embedding" />
+                                <Label styleClass="text-bold" text="Extraction &amp; Embedding Activity Log" />
                                 <Region HBox.hgrow="ALWAYS" />
-                                <Button fx:id="btnClearLog" onAction="#onClearLog" text="Bersihkan Log" />
+                                <Button fx:id="btnClearLog" onAction="#onClearLog" text="Clear Log" />
                             </HBox>
                             <TextArea fx:id="logConsoleArea" editable="false" prefRowCount="12" styleClass="console-log" wrapText="true" VBox.vgrow="ALWAYS" />
                         </VBox>

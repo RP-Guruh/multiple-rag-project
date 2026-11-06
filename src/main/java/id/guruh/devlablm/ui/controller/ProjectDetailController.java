@@ -45,14 +45,13 @@ import java.util.Locale;
 public class ProjectDetailController {
 
     private static final DateTimeFormatter DATE_FMT =
-            DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm", Locale.forLanguageTag("id-ID"));
+            DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm", Locale.US);
 
     private final ProjectService projectService;
 
     // Header FXML
     @FXML private Label lblHeaderTitle;
     @FXML private Label lblHeaderSubtitle;
-    @FXML private Button btnHeaderSave;
     @FXML private Button btnHeaderTrain;
 
     // Form FXML (Left Panel)
@@ -74,7 +73,7 @@ public class ProjectDetailController {
     @FXML private Button btnUploadQueue;
     @FXML private Label lblUploadFeedback;
 
-    // Table Section FXML
+    // Knowledge Table FXML
     @FXML private TextField searchDocField;
     @FXML private ComboBox<String> typeFilterCombo;
     @FXML private Button btnRefreshTable;
@@ -86,9 +85,8 @@ public class ProjectDetailController {
     @FXML private TableColumn<KnowledgeItem, String> colUploadedAt;
     @FXML private TableColumn<KnowledgeItem, String> colStatus;
     @FXML private Label lblKnowledgeSummary;
-    @FXML private Button btnQuickTrain;
 
-    // Training Section FXML (Tab 2)
+    // Training Pipeline FXML (Tab 2)
     @FXML private Button btnTabStartTraining;
     @FXML private Label lblTrainingStatusBadge;
     @FXML private Label lblTrainingPercent;
@@ -174,9 +172,9 @@ public class ProjectDetailController {
                 } else {
                     Label badge = new Label(status);
                     badge.getStyleClass().add("badge-tag");
-                    if ("Sudah Dilatih".equalsIgnoreCase(status) || "Terkonversi".equalsIgnoreCase(status)) {
+                    if ("Trained".equalsIgnoreCase(status) || "Sudah Dilatih".equalsIgnoreCase(status) || "Terkonversi".equalsIgnoreCase(status)) {
                         badge.getStyleClass().add("badge-status-trained");
-                    } else if ("Terekstraksi".equalsIgnoreCase(status) || "Siap Training".equalsIgnoreCase(status)) {
+                    } else if ("Ready".equalsIgnoreCase(status) || "Extracted".equalsIgnoreCase(status) || "Terekstraksi".equalsIgnoreCase(status) || "Siap Training".equalsIgnoreCase(status)) {
                         badge.getStyleClass().add("badge-status-ready");
                     } else {
                         badge.getStyleClass().add("badge-status-pending");
@@ -193,7 +191,7 @@ public class ProjectDetailController {
 
     private void setupFilters() {
         typeFilterCombo.setItems(FXCollections.observableArrayList(
-                "Semua Format", "PDF", "Word", "Excel", "Text"
+                "All Formats", "PDF", "Word", "Excel", "Text"
         ));
         typeFilterCombo.getSelectionModel().selectFirst();
 
@@ -210,7 +208,7 @@ public class ProjectDetailController {
                     item.getFileName().toLowerCase().contains(query);
 
             boolean matchType = true;
-            if (selectedType != null && !selectedType.equals("Semua Format")) {
+            if (selectedType != null && !selectedType.equals("All Formats") && !selectedType.equals("Semua Format")) {
                 matchType = item.getFileType().equalsIgnoreCase(selectedType);
             }
 
@@ -221,10 +219,10 @@ public class ProjectDetailController {
 
     private void setupInitialKnowledgeData() {
         masterKnowledgeList.addAll(
-                new KnowledgeItem("panduan-layanan-pelanggan.pdf", "PDF", "2.4 MB", 184, "06 Nov 2026 10:15", "Sudah Dilatih"),
-                new KnowledgeItem("sop-operasional-perusahaan-2026.docx", "Word", "1.1 MB", 120, "06 Nov 2026 11:20", "Sudah Dilatih"),
-                new KnowledgeItem("daftar-produk-dan-katalog-harga.xlsx", "Excel", "680 KB", 86, "06 Nov 2026 11:45", "Sudah Dilatih"),
-                new KnowledgeItem("faq-kebijakan-retur-dan-garansi.txt", "Text", "145 KB", 38, "06 Nov 2026 13:00", "Sudah Dilatih")
+                new KnowledgeItem("customer-service-guide.pdf", "PDF", "2.4 MB", 184, "06 Nov 2026 10:15", "Trained"),
+                new KnowledgeItem("standard-operating-procedures-2026.docx", "Word", "1.1 MB", 120, "06 Nov 2026 11:20", "Trained"),
+                new KnowledgeItem("product-catalog-and-pricing.xlsx", "Excel", "680 KB", 86, "06 Nov 2026 11:45", "Trained"),
+                new KnowledgeItem("return-policy-and-warranty-faq.txt", "Text", "145 KB", 38, "06 Nov 2026 13:00", "Trained")
         );
         updateSummaryLabel();
     }
@@ -232,9 +230,9 @@ public class ProjectDetailController {
     private void setupInitialLogs() {
         logConsoleArea.setText(
                 """
-                [SYSTEM READY] DevLab LM Studio RAG Pipeline initialized.
-                [DATABASE] PostgreSQL connection active (Extension pgvector detected).
-                [KNOWLEDGE] 4 documents loaded in database (428 total vector chunks).
+                [SYSTEM READY] RAG pipeline initialized.
+                [DATABASE] PostgreSQL connection active (pgvector extension detected).
+                [KNOWLEDGE] 4 documents loaded (428 total vector chunks).
                 [MODEL] Embedding model ready: text-embedding-3-small (1536 dim).
                 """
         );
@@ -243,21 +241,21 @@ public class ProjectDetailController {
     private void updateSummaryLabel() {
         int totalDocs = masterKnowledgeList.size();
         int totalChunks = masterKnowledgeList.stream().mapToInt(KnowledgeItem::getChunkCount).sum();
-        lblKnowledgeSummary.setText("Total: " + totalDocs + " Dokumen | " + totalChunks + " Vektor Chunk | Database PostgreSQL Siap");
+        lblKnowledgeSummary.setText("Total: " + totalDocs + " Documents | " + totalChunks + " Vector Chunks | PostgreSQL pgvector ready");
     }
 
     @FXML
     public void onBrowseFiles() {
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("Pilih Dokumen Pengetahuan RAG");
+        chooser.setTitle("Select Knowledge Base Documents");
         chooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Semua Dokumen RAG (*.pdf, *.docx, *.doc, *.xlsx, *.xls, *.txt, *.md, *.csv)",
+                new FileChooser.ExtensionFilter("All Supported Documents (*.pdf, *.docx, *.doc, *.xlsx, *.xls, *.txt, *.md, *.csv)",
                         "*.pdf", "*.docx", "*.doc", "*.xlsx", "*.xls", "*.txt", "*.md", "*.csv"),
-                new FileChooser.ExtensionFilter("Dokumen PDF (*.pdf)", "*.pdf"),
-                new FileChooser.ExtensionFilter("Dokumen Word (*.docx, *.doc)", "*.docx", "*.doc"),
-                new FileChooser.ExtensionFilter("Dokumen Excel (*.xlsx, *.xls)", "*.xlsx", "*.xls"),
-                new FileChooser.ExtensionFilter("Dokumen Teks (*.txt, *.md, *.csv)", "*.txt", "*.md", "*.csv"),
-                new FileChooser.ExtensionFilter("Semua Berkas (*.*)", "*.*")
+                new FileChooser.ExtensionFilter("PDF Documents (*.pdf)", "*.pdf"),
+                new FileChooser.ExtensionFilter("Word Documents (*.docx, *.doc)", "*.docx", "*.doc"),
+                new FileChooser.ExtensionFilter("Excel Spreadsheets (*.xlsx, *.xls)", "*.xlsx", "*.xls"),
+                new FileChooser.ExtensionFilter("Text Documents (*.txt, *.md, *.csv)", "*.txt", "*.md", "*.csv"),
+                new FileChooser.ExtensionFilter("All Files (*.*)", "*.*")
         );
 
         List<File> files = chooser.showOpenMultipleDialog(dropZone.getScene().getWindow());
@@ -284,14 +282,14 @@ public class ProjectDetailController {
         boolean hasFiles = !pendingFiles.isEmpty();
         queueContainer.setVisible(hasFiles);
         queueContainer.setManaged(hasFiles);
-        lblUploadFeedback.setText(hasFiles ? pendingFiles.size() + " berkas terpilih dan siap diunggah." : "");
+        lblUploadFeedback.setText(hasFiles ? pendingFiles.size() + " file(s) selected." : "");
     }
 
     @FXML
     public void onClearQueue() {
         pendingFiles.clear();
         refreshQueueView();
-        lblUploadFeedback.setText("Pilihan berkas dibatalkan.");
+        lblUploadFeedback.setText("File selection cleared.");
     }
 
     @FXML
@@ -307,16 +305,16 @@ public class ProjectDetailController {
             String name = f.getName();
             String type = detectFileType(name);
             String sizeStr = formatFileSize(f.length());
-            int estimatedChunks = Math.max(1, (int) (f.length() / 1024)); // perkiraan kasar per KB
+            int estimatedChunks = Math.max(1, (int) (f.length() / 1024));
 
-            masterKnowledgeList.add(0, new KnowledgeItem(name, type, sizeStr, estimatedChunks, now, "Terekstraksi"));
-            appendLog("[UPLOAD SUCCESS] Dokumen diunggah: " + name + " (" + type + ", " + sizeStr + ") -> " + estimatedChunks + " chunk siap dilatih.");
+            masterKnowledgeList.add(0, new KnowledgeItem(name, type, sizeStr, estimatedChunks, now, "Ready"));
+            appendLog("[UPLOAD SUCCESS] Uploaded: " + name + " (" + type + ", " + sizeStr + ") -> " + estimatedChunks + " chunks ready for indexing.");
             addedCount++;
         }
 
         pendingFiles.clear();
         refreshQueueView();
-        lblUploadFeedback.setText(addedCount + " dokumen berhasil ditambahkan ke daftar pengetahuan! Siap untuk ditraining.");
+        lblUploadFeedback.setText(addedCount + " document(s) added to knowledge base.");
         updateSummaryLabel();
     }
 
@@ -325,7 +323,7 @@ public class ProjectDetailController {
         searchDocField.clear();
         typeFilterCombo.getSelectionModel().selectFirst();
         updateSummaryLabel();
-        appendLog("[KNOWLEDGE] Daftar dokumen di-refresh.");
+        appendLog("[KNOWLEDGE] Document table refreshed.");
     }
 
     @FXML
@@ -335,7 +333,7 @@ public class ProjectDetailController {
         String prompt = systemPromptArea.getText();
 
         if (name == null || name.isBlank()) {
-            lblSaveStatus.setText("Nama project wajib diisi!");
+            lblSaveStatus.setText("Project name is required.");
             nameField.requestFocus();
             return;
         }
@@ -344,85 +342,78 @@ public class ProjectDetailController {
             if (currentProject != null && currentProject.getId() != null) {
                 currentProject = projectService.update(currentProject.getId().longValue(), name, desc, prompt);
                 lblHeaderTitle.setText("Project: " + currentProject.getName());
-                lblSaveStatus.setText("Perubahan berhasil disimpan! (" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + ")");
+                lblSaveStatus.setText("Changes saved (" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + ")");
             } else {
                 currentProject = projectService.create(name, desc, prompt);
                 lblHeaderTitle.setText("Project: " + currentProject.getName());
-                lblSaveStatus.setText("Project berhasil dibuat!");
+                lblSaveStatus.setText("Project created successfully.");
             }
 
             if (onProjectUpdated != null) {
                 onProjectUpdated.run();
             }
 
-            appendLog("[PROJECT SAVED] Konfigurasi project & system prompt berhasil disimpan ke database.");
+            appendLog("[PROJECT SAVED] Project configuration and system prompt saved to database.");
         } catch (Exception ex) {
-            lblSaveStatus.setText("Gagal menyimpan: " + ex.getMessage());
-            appendLog("[ERROR] Gagal menyimpan project: " + ex.getMessage());
+            lblSaveStatus.setText("Save failed: " + ex.getMessage());
+            appendLog("[ERROR] Failed to save project: " + ex.getMessage());
         }
     }
 
     @FXML
     public void onStartTraining() {
-        // Pindah ke tab Training
         mainTabPane.getSelectionModel().select(1);
 
-        btnHeaderTrain.setDisable(true);
-        btnQuickTrain.setDisable(true);
         btnTabStartTraining.setDisable(true);
 
-        lblTrainingStatusBadge.setText("Sedang Training...");
+        lblTrainingStatusBadge.setText("Processing...");
         lblTrainingStatusBadge.getStyleClass().removeAll("badge-status-trained", "badge-status-pending");
         lblTrainingStatusBadge.getStyleClass().add("badge-status-ready");
         trainingProgressBar.setProgress(0.0);
         lblTrainingPercent.setText("0%");
 
-        appendLog("\n==================== MEMULAI TRAINING AI & VEKTORISASI RAG ====================");
-        appendLog("[STEP 1/5] Memindai " + masterKnowledgeList.size() + " dokumen pengetahuan...");
+        appendLog("\n==================== STARTING EMBEDDING & INDEXING PIPELINE ====================");
+        appendLog("[STEP 1/5] Scanning " + masterKnowledgeList.size() + " knowledge base documents...");
 
-        // Simulasi progres training AI step-by-step
         Timeline timeline = new Timeline();
         timeline.getKeyFrames().addAll(
                 new KeyFrame(Duration.millis(600), e -> {
                     trainingProgressBar.setProgress(0.20);
                     lblTrainingPercent.setText("20%");
-                    appendLog("[STEP 2/5] Mengekstraksi teks dokumen (PDF, Word, Excel, Teks)... OK");
+                    appendLog("[STEP 2/5] Extracting document text (PDF, Word, Excel, Text)... OK");
                 }),
                 new KeyFrame(Duration.millis(1300), e -> {
                     trainingProgressBar.setProgress(0.45);
                     lblTrainingPercent.setText("45%");
-                    appendLog("[STEP 3/5] Tokenisasi semantik & pembagian dokumen menjadi 428 chunk vektor... OK");
+                    appendLog("[STEP 3/5] Chunking content into semantic segments (428 total chunks)... OK");
                 }),
                 new KeyFrame(Duration.millis(2100), e -> {
                     trainingProgressBar.setProgress(0.75);
                     lblTrainingPercent.setText("75%");
-                    appendLog("[STEP 4/5] Mengirim chunk ke model embedding & menghitung representasi vektor 1536-dimensi... OK");
+                    appendLog("[STEP 4/5] Computing 1536-dimensional embeddings with text-embedding-3-small... OK");
                 }),
                 new KeyFrame(Duration.millis(3000), e -> {
                     trainingProgressBar.setProgress(1.0);
                     lblTrainingPercent.setText("100%");
-                    lblTrainingStatusBadge.setText("Training Selesai & Aktif");
+                    lblTrainingStatusBadge.setText("Active");
                     lblTrainingStatusBadge.getStyleClass().removeAll("badge-status-ready", "badge-status-pending");
                     lblTrainingStatusBadge.getStyleClass().add("badge-status-trained");
 
-                    // Update status semua item di tabel menjadi 'Sudah Dilatih'
                     for (KnowledgeItem item : masterKnowledgeList) {
-                        item.setStatus("Sudah Dilatih");
+                        item.setStatus("Trained");
                     }
                     knowledgeTable.refresh();
 
-                    appendLog("[STEP 5/5] Indeks pgvector (IVFFlat / HNSW) berhasil di-update pada database PostgreSQL!");
-                    appendLog("[SELESAI] Model AI siap menjawab pertanyaan berdasarkan basis pengetahuan project.");
-                    appendLog("==============================================================================\n");
+                    appendLog("[STEP 5/5] Updated pgvector index (HNSW / IVFFlat) in PostgreSQL.");
+                    appendLog("[COMPLETED] Knowledge base indexing complete. Vector retrieval ready.");
+                    appendLog("=================================================================================\n");
 
-                    btnHeaderTrain.setDisable(false);
-                    btnQuickTrain.setDisable(false);
                     btnTabStartTraining.setDisable(false);
 
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Training AI Berhasil");
-                    alert.setHeaderText("Basis Pengetahuan RAG Berhasil Dilatih");
-                    alert.setContentText("Seluruh dokumen RAG telah berhasil diekstraksi, di-embedding, dan diindeks ke pgvector. Asisten AI siap digunakan!");
+                    alert.setTitle("Indexing Complete");
+                    alert.setHeaderText("Knowledge Base Indexing Successful");
+                    alert.setContentText("All documents have been extracted, chunked, embedded, and stored in pgvector.");
                     alert.show();
                 })
         );
@@ -446,7 +437,7 @@ public class ProjectDetailController {
         if (lower.endsWith(".docx") || lower.endsWith(".doc")) return "Word";
         if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) return "Excel";
         if (lower.endsWith(".txt") || lower.endsWith(".md") || lower.endsWith(".csv")) return "Text";
-        return "Dokumen";
+        return "Document";
     }
 
     private String formatFileSize(long bytes) {
