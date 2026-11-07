@@ -1,183 +1,266 @@
-# DevLabLM — Multiple RAG Project
+# DevLabLM — Multi-Project RAG Studio
 
-Sistem manajemen **Knowledge Base AI Modular** berbasis **Retrieval-Augmented Generation (RAG)** yang dibangun menggunakan arsitektur hybrid **JavaFX Desktop & Spring Boot Embedded Server**. 
+A local, project-isolated Retrieval-Augmented Generation (RAG) studio and inference engine built on **Java 21/25**, **Spring Boot 4**, **JavaFX 23**, and **PostgreSQL (`pgvector`)**.
 
-Platform ini memungkinkan pembuatan, pengelolaan, dan isolasi knowledge secara spesifik per project. Setiap project dapat diuji secara langsung melalui playground interaktif di desktop dan menghasilkan **Dedicated REST API** mandiri yang siap dikonsumsi oleh aplikasi web, mobile, atau sistem pihak ketiga.
-
----
-
-## 📌 Mengapa DevLabLM?
-
-Ketika mengintegrasikan LLM ke dalam berbagai kebutuhan bisnis (seperti SOP HRD, Dokumentasi Teknis, atau Customer Support untuk produk berbeda), sering kali terjadi masalah:
-1. **Context Bleeding (Pencampuran Konteks)**: Knowledge antar divisi atau project bercampur sehingga respon AI menjadi bias atau tidak akurat.
-2. **Biaya & Kompleksitas Fine-Tuning**: Melatih ulang bobot model (*weight retraining*) membutuhkan biaya komputasi tinggi dan waktu yang lama.
-3. **Ketiadaan Sarana Pengujian Lokal**: Sulit memvalidasi apakah dokumen yang dimasukkan sudah dijawab dengan benar oleh AI sebelum dirilis ke aplikasi web.
-
-**DevLabLM** menyelesaikan masalah tersebut dengan pendekatan:
-- **Zero-Retraining**: Cukup masukkan dokumen dan konfigurasi prompt; AI langsung memahami data spesifik menggunakan teknik RAG.
-- **Strict Project Isolation**: Setiap knowledge base memiliki ruang vektor (*vector namespace*) terpisah.
-- **Hybrid Desktop + API Gateway**: Kelola dan uji langsung di antarmuka desktop modern, lalu sajikan via REST API untuk integrasi web.
+DevLabLM provides a native desktop interface for document ingestion, multimodal vision OCR fallback, text chunking, vector embedding, and real-time chat evaluation with strict knowledge boundaries per project.
 
 ---
 
-## 🌟 Fitur Utama
+## Architecture & Technology Stack
 
-- **🗂️ Multi-Project Workspace**: Buat dan kelola banyak project chatbot/RAG dalam satu antarmuka terpusat tanpa saling mengganggu.
-- **📚 Knowledge Ingestion & Indexing**: Pengunggahan dan pemrosesan dokumen (ekstraksi teks, pemotongan konteks/*chunking*, serta pembuatan *vector embeddings*).
-- **💬 Free Chat Testing Playground**: Ruang simulasi percakapan interaktif di desktop untuk menguji pemahaman AI dan relevansi retrieval dokumen sebelum live di production.
-- **⚙️ Pengaturan Provider AI Terpadu**: Dukungan konfigurasi provider AI / LLM (OpenAI, Ollama, Local LLM, endpoint kustom, API Key, serta pemilihan model).
-- **🌐 Dedicated REST API Server**: Server HTTP Spring Boot tertanam (*embedded*) yang melayani permintaan tanya-jawab dari aplikasi web/klien eksternal berdasarkan identitas project.
-- **🎨 Modern Desktop UI**: Antarmuka berbasis JavaFX dengan tema modern AtlantaFX dan Material Design Icons.
+```
++---------------------------------------------------------------------------------+
+|                                 USER INTERFACE                                  |
+|         JavaFX 23 Desktop UI | AtlantaFX Themes | Ikonli Material Icons         |
+|  [ Dashboard ]     [ Project Detail & Upload ]     [ Chatbot Playground ]       |
++---------------------------------------+-----------------------------------------+
+                                        | Event / Controller Invocation
+                                        v
++---------------------------------------------------------------------------------+
+|                               APPLICATION CORE                                  |
+|                 Spring Boot 4 Application Context & Dependency Injection        |
+|                                                                                 |
+|  +--------------------+  +----------------------+  +-------------------------+  |
+|  |   DocumentService  |  | TextChunkerService   |  | ChatbotInferenceService |  |
+|  +--------------------+  +----------------------+  +-------------------------+  |
+|  +--------------------+  +----------------------+  +-------------------------+  |
+|  | DocumentParserSvc  |  | EmbeddingService     |  | RagRetrievalService     |  |
+|  | (PDFBox + Vision)  |  | (Ollama + OpenAI)    |  | (pgvector HNSW Cosine)  |  |
+|  +--------------------+  +----------------------+  +-------------------------+  |
++------------------------+------------------------------------+-------------------+
+                         |                                    |
+                         v                                    v
++-----------------------------------+        +------------------------------------+
+|       LOCAL APP STORAGE           |        |      POSTGRESQL + PGVECTOR         |
+|  SQLite (Local app config)        |        |  Dynamic Hikari Connection Pool    |
+|  Disk (data/projects/{id}/docs/)  |        |  projects, documents,              |
+|                                   |        |  document_chunks (embedding vector)|
++-----------------------------------+        +------------------------------------+
+```
+
+### Component Breakdown
+
+| Layer | Component | Implementation |
+|---|---|---|
+| **Runtime & Core** | Java 21/25, Spring Boot 4.1.2 | Dependency injection, application lifecycle bridge, embedded web container. |
+| **Desktop UI** | JavaFX 23, AtlantaFX 2.0, Ikonli 12.4 | Modern desktop interface, CSS theming, reactive event bus. |
+| **Document Extraction** | Apache PDFBox 3.0.3, Apache POI 5.3.0 | PDF text stripping, Word docx paragraph parser, Excel tabular sheet extractor. |
+| **Multimodal Vision OCR** | Ollama (`llava`) / OpenAI Vision | Renders scanned PDF pages to 150 DPI JPEG and transcribes text verbatim via Vision LLM. |
+| **Chunking Engine** | Custom Recursive Chunker | Split threshold 500-800 characters with 100-120 overlap, splitting on natural breaks (`\n\n`, `. `, `? `, `! `, `\n`). |
+| **Embedding Client** | Java HTTP Client (HTTP/2) | Primary OpenAI-compatible endpoint with automatic fallback to local Ollama (`nomic-embed-text`, 768 dim). |
+| **Vector Database** | PostgreSQL + `pgvector` | HNSW cosine similarity index (`vector_cosine_ops`), managed dynamically via Flyway migrations. |
+| **Metadata Storage** | SQLite (`data/app.db`) | Stores application configuration, encrypted API tokens, and database credentials locally. |
 
 ---
 
-## 🔄 Alur Kerja Sistem (Workflow)
+## RAG Workflow & Sequence Diagrams
 
-Sistem bekerja dalam dua fase berkesinambungan:
+### 1. Document Upload & Ingestion Pipeline
 
 ```mermaid
-flowchart TD
-    subgraph Fase 1: Manajemen Knowledge & Pengujian di Desktop
-        A[Buat / Pilih Project] --> B[Unggah Dokumen Knowledge]
-        B --> C[Proses Chunking & Vektor Embedding]
-        C --> D[Uji Percakapan di Free Chat Playground]
-        D -->|Jawaban Belum Akurat| B
-        D -->|Hasil Valid & Sesuai| E[Aktifkan Project & Dapatkan API Key]
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as ProjectDetailController (JavaFX)
+    participant DS as DocumentService
+    participant Disk as Local Storage (FS)
+    participant DB as PostgreSQL
+    participant Worker as Background Ingestion Thread
+    participant DPS as DocumentParserService
+    participant TC as TextChunkerService
+    participant ES as EmbeddingService
+    participant Ollama as Ollama / AI Provider
+
+    User->>UI: Select / Drop Files (PDF, Word, Excel, Text)
+    UI->>DS: uploadDocument(projectId, File)
+    DS->>DS: Compute SHA-256 Hash
+    DS->>Disk: Copy file to data/projects/{id}/docs/
+    DS->>DB: INSERT into documents (status='UPLOADED', chunk_count=0)
+    DS-->>UI: Return DocumentEntity
+    UI-->>User: Display document in table (Status: Ready)
+
+    User->>UI: Click "Start Training"
+    UI->>Worker: Launch trainProjectKnowledge()
+    Worker->>DB: UPDATE documents SET status='EXTRACTING'
+    Worker->>DPS: extractText(file, type)
+    
+    alt Standard PDF with Text Layer
+        DPS-->>Worker: Extracted Plain Text
+    else Scanned / Image-only PDF (< 50 chars)
+        DPS->>DPS: Render pages to 150 DPI images
+        DPS->>Ollama: Send page images for Vision OCR
+        Ollama-->>DPS: Transcribed text
+        DPS-->>Worker: Transcribed Plain Text
     end
 
-    subgraph Fase 2: Integrasi & Konsumsi REST API Web
-        F[Aplikasi Web / Klien Eksternal] -->|Request HTTP + Project API Key| G[DevLabLM REST API Server]
-        G -->|Query Retrieval Sesuai Project| H[Vector Knowledge Store]
-        H -->|Konteks Dokumen Relevan| G
-        G -->|Prompt + Konteks + Pertanyaan| I[LLM / AI Provider]
-        I -->|Jawaban Terverifikasi| G
-        G -->|Response JSON| F
+    Worker->>DB: UPDATE documents SET status='CHUNKING'
+    Worker->>TC: splitIntoChunks(text, 800, 120)
+    TC-->>Worker: List<Chunk> (text segments + token counts)
+
+    Worker->>DB: UPDATE documents SET status='EMBEDDING'
+    Worker->>ES: computeEmbeddings(chunkTexts)
+    
+    alt Configured Endpoint Responds
+        ES->>Ollama: POST /v1/embeddings
+        Ollama-->>ES: float[][] vectors
+    else Primary Fails (400 / Unsupported Format)
+        ES->>Ollama: Fallback POST http://localhost:11434/api/embed (nomic-embed-text)
+        Ollama-->>ES: float[][] vectors (768 dim)
+    end
+    ES-->>Worker: List<float[]> embeddings
+
+    Worker->>DB: BATCH INSERT into document_chunks (embedding = vector)
+    Worker->>DB: UPDATE documents SET status='INDEXED', chunk_count=N
+    Worker-->>UI: Update ProgressBar & Log Console
+    UI-->>User: Show Indexing Complete Alert
+```
+
+---
+
+### 2. Isolated Chat Inference & Context Retrieval
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as ChatbotController (Playground)
+    participant CS as ChatbotInferenceService
+    participant RS as RagRetrievalService
+    participant DB as PostgreSQL (pgvector)
+    participant LLM as AI Chat Model (dian_sipemikir)
+
+    User->>UI: Select Project A from Dropdown
+    User->>UI: Type message and press Enter
+    UI->>CS: chat(projectA, userQuery)
+    CS->>RS: retrieveContext(projectA.id, userQuery, topK=4, minSim=0.40)
+    
+    RS->>DB: SELECT content, 1 - (embedding <=> queryVector) AS sim<br/>FROM document_chunks<br/>WHERE project_id = projectA.id<br/>ORDER BY embedding <=> queryVector LIMIT 4
+    Note over RS,DB: Strict Isolation: Project B data is ignored completely
+    DB-->>RS: Return matched context chunks
+    RS-->>CS: List<RetrievedContext>
+
+    alt Relevant Context Found
+        CS->>CS: Construct Prompt: Persona + Retrieved Chunks + Strict Refusal Rule
+        CS->>LLM: POST /v1/chat/completions (System Prompt + User Message)
+        LLM-->>CS: Grounded response based only on context
+        CS-->>UI: Return ChatResponse (answer + citation badges)
+        UI-->>User: Display AI Bubble with Chunk Citations
+    else No Context Matches Threshold
+        CS->>CS: Inject explicit refusal instruction
+        CS-->>UI: "Information not found in this project's knowledge base."
+        UI-->>User: Display polite refusal message
     end
 ```
 
-### Tahapan Detail:
-1. **Pembuatan Project**: Tetapkan nama dan batasan domain (misal: *SOP Operasional*, *Dokumentasi Produk API*).
-2. **Indexing & Ekstraksi RAG**: Dokumen dipecah menjadi unit-unit informasi kecil (*chunks*) dan dipetakan ke dalam ruang vektor secara terisolasi.
-3. **Validasi Respon (Desktop Playground)**: Lakukan uji tanya-jawab langsung di aplikasi desktop untuk memastikan akurasi data dan meminimalkan halusinasi model.
-4. **Penerbitan API Project**: Setiap project siap diakses secara remote oleh aplikasi luar melalui endpoint REST API yang aman.
+---
+
+## Database Schemas
+
+### PostgreSQL (Knowledge & Vectors)
+
+```sql
+-- Projects Table
+CREATE TABLE projects (
+    id            BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    name          VARCHAR(255) NOT NULL,
+    description   TEXT,
+    system_prompt TEXT,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Documents Metadata Table
+CREATE TABLE documents (
+    id            BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    project_id    BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    file_name     VARCHAR(255) NOT NULL,
+    file_path     TEXT NOT NULL,
+    file_type     VARCHAR(50) NOT NULL,
+    file_size     BIGINT NOT NULL,
+    sha256_hash   VARCHAR(64),
+    status        VARCHAR(30) NOT NULL DEFAULT 'UPLOADED',
+    error_message TEXT,
+    chunk_count   INT NOT NULL DEFAULT 0,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Vector Chunks Table
+CREATE TABLE document_chunks (
+    id            BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+    document_id   BIGINT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    project_id    BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    chunk_index   INT NOT NULL,
+    content       TEXT NOT NULL,
+    token_count   INT NOT NULL DEFAULT 0,
+    embedding     vector,
+    metadata      TEXT,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- HNSW Cosine Index for Fast Retrieval
+CREATE INDEX idx_document_chunks_embedding_hnsw 
+ON document_chunks USING hnsw (embedding vector_cosine_ops)
+WITH (m = 16, ef_construction = 64);
+```
+
+### SQLite (`data/app.db`)
+
+* `ai_setting`: Stores AI endpoint URL, encrypted API key, and active model name.
+* `database_setting`: Stores PostgreSQL host, port, database name, username, schema, and encrypted password.
 
 ---
 
-## 🏗️ Arsitektur Teknologi
-
-Aplikasi ini menggunakan perpaduan teknologi Java modern:
-
-| Komponen | Teknologi | Deskripsi |
-|---|---|---|
-| **Core Framework** | Spring Boot 4.x / Java 25 | Injeksi dependensi, konfigurasi aplikasi, dan web service |
-| **Desktop UI** | JavaFX 23 & FXML | Antarmuka grafis desktop native yang responsif |
-| **UI Styling** | AtlantaFX 2.0 & Ikonli Material2 | Tampilan modern, tema bersih, dan icon pack komprehensif |
-| **API Server** | Spring Web (Tomcat Embedded) | Menyediakan endpoint REST API di latar belakang |
-| **Pattern** | MVC / Event-Driven | Integrasi siklus hidup Spring Boot dan JavaFX (`StageReadyEvent`) |
-
----
-
-## 📁 Struktur Direktori
+## Directory Structure
 
 ```text
 devlablm/
-├── src/
-│   ├── main/
-│   │   ├── java/id/guruh/devlablm/
-│   │   │   ├── DevlablmApplication.java    # Titik masuk utama Spring Boot
-│   │   │   ├── JavaFxApplication.java      # Titik masuk siklus hidup JavaFX
-│   │   │   ├── controller/                 # REST API Controller (Spring Web)
-│   │   │   │   └── ApiController.java
-│   │   │   ├── service/                    # Logika bisnis & integrasi data
-│   │   │   │   └── AppService.java
-│   │   │   ├── model/                      # Data Transfer Objects (DTO) / Records
-│   │   │   │   └── ServerInfo.java
-│   │   │   ├── event/                      # Event bridge Spring <-> JavaFX
-│   │   │   │   └── StageReadyEvent.java
-│   │   │   └── ui/                         # Komponen UI JavaFX
-│   │   │       ├── FxmlViewLoader.java     # Helper loader tampilan FXML
-│   │   │       ├── StageInitializer.java   # Inisialisasi jendela desktop utama
-│   │   │       └── controller/             # Controller tampilan FXML (Dashboard, Settings, AI)
-│   │   └── resources/
-│   │       ├── css/app.css                 # Custom CSS overrides
-│   │       ├── fxml/                       # Berkas tata letak antarmuka FXML
-│   │       │   ├── main.fxml
-│   │       │   ├── dashboard.fxml
-│   │       │   ├── ai-settings.fxml
-│   │       │   └── settings.fxml
-│   │       └── application.properties      # Konfigurasi aplikasi & server port
-│   └── test/                               # Unit & integration testing
-├── pom.xml                                 # Konfigurasi dependensi Maven
-└── README.md                               # Dokumentasi project
+├── data/
+│   ├── app.db                              # Local SQLite configuration database
+│   └── projects/{id}/docs/                 # Local filesystem document storage
+├── src/main/java/id/guruh/devlablm/
+│   ├── DevlablmApplication.java           # Spring Boot entry point
+│   ├── JavaFxApplication.java             # JavaFX lifecycle bridge
+│   ├── config/                            # Dual-DataSource, Dynamic Hikari, Flyway
+│   ├── postgres/                          # Entities, Repositories, ProjectService
+│   ├── sqlite/                            # Local settings entities and services
+│   ├── rag/service/
+│   │   ├── DocumentParserService.java     # PDF/Word/Excel parser + Vision OCR fallback
+│   │   ├── TextChunkerService.java        # Recursive semantic chunking
+│   │   ├── EmbeddingService.java          # Multi-provider vector generator + Ollama fallback
+│   │   ├── RagIngestionPipelineService.java# Background training pipeline coordinator
+│   │   ├── RagRetrievalService.java       # Project-isolated vector similarity search
+│   │   └── ChatbotInferenceService.java   # Strict grounding prompt & chat runner
+│   └── ui/controller/
+│       ├── MainLayoutController.java      # Navigation sidebar & page router
+│       ├── DashboardController.java       # Project cards & deletion dialogs
+│       ├── ProjectDetailController.java   # Drag-and-drop upload & training logs
+│       └── ChatbotController.java         # Project-isolated chat interface
+├── src/main/resources/
+│   ├── db/migration/postgres/             # Flyway SQL migrations (V1 to V4)
+│   ├── fxml/                              # FXML view layouts
+│   └── css/app.css                        # Application styles and chat bubbles
+└── pom.xml                                # Maven build definitions
 ```
 
 ---
 
-## 🚀 Panduan Memulai
+## Getting Started
 
-### Prasyarat Sistem
-- **Java Development Kit (JDK)**: Versi 21 atau versi 25 (LTS yang didukung).
-- **Maven**: Opsional (aplikasi sudah menyertakan Maven Wrapper `./mvnw`).
-- **Koneksi Internet**: Diperlukan saat build pertama kali untuk mendownload pustaka dependensi.
+### Prerequisites
+* **JDK 21** or **JDK 25**
+* **PostgreSQL 14+** with `pgvector` extension installed
+* **Ollama** (optional, recommended for local embeddings: `ollama pull nomic-embed-text`)
 
-### 1. Clone Repository
+### Running the Application
+
 ```bash
-git clone https://github.com/RP-Guruh/multiple-rag-project.git
-cd multiple-rag-project
+# Compile and run
+./mvnw spring-boot:run
 ```
 
-### 2. Beri Izin Eksekusi Maven Wrapper (Linux / macOS)
-```bash
-chmod +x mvnw
-```
-
-### 3. Menjalankan Aplikasi
-
-Aplikasi akan otomatis menyalakan server REST API Spring Boot sekaligus membuka jendela antarmuka JavaFX:
-
-- **Linux / macOS**:
-  ```bash
-  ./mvnw spring-boot:run
-  ```
-
-- **Windows (CMD / PowerShell)**:
-  ```cmd
-  mvnw.cmd spring-boot:run
-  ```
-
-### 4. Build Executable JAR untuk Distribusi
-Untuk mengemas seluruh aplikasi menjadi standalone runnable JAR:
-```bash
-./mvnw clean package -DskipTests
-```
-Hasil file `.jar` akan berada di folder `target/` dan dapat dijalankan dengan perintah:
-```bash
-java -jar target/devlablm-0.0.1-SNAPSHOT.jar
-```
-
----
-
-## 🔌 Dokumentasi REST API
-
-Secara bawaan, Spring Boot menjalankan embedded HTTP server pada port yang dikonfigurasikan di `application.properties` (default: port `8080`).
-
-### Contoh Endpoint:
-- **Cek Status Server**:
-  ```http
-  GET /api/status
-  ```
-  **Response**:
-  ```json
-  {
-    "appName": "DevLabLM",
-    "status": "RUNNING",
-    "port": 8080,
-    "timestamp": "2026-10-25T17:00:00"
-  }
-  ```
-
----
-
-## 📄 Lisensi & Kontribusi
-
-Proyek ini dikembangkan secara open-source. Kontribusi berupa bug report, saran perbaikan fitur, maupun pull request sangat diterima.
+1. Open **Database Settings** on the sidebar, provide your PostgreSQL credentials, and click **Save**.
+2. Open **AI Settings**, configure your AI endpoint and model name.
+3. In **Dashboard**, create a new project.
+4. Upload documents (PDF, Word, Excel, TXT) and click **Start Training**.
+5. Switch to **Try Chatbot**, select your project, and start querying your knowledge base.

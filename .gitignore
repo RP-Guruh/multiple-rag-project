@@ -40,4 +40,8 @@ technical.md
 data/
 *.db
 
+# Internal developer maintenance guide
+programmer.md
+
+
 

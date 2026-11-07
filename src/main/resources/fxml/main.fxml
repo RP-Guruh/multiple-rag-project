@@ -39,6 +39,12 @@
                         <FontIcon iconLiteral="mdal-dashboard" iconSize="18" />
                     </graphic>
                 </Button>
+
+                <Button fx:id="navChatBotBtn" alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" onAction="#onNavChatBot" styleClass="flat" text="Try Chatbot">
+                    <graphic>
+                        <FontIcon iconLiteral="mdal-dashboard" iconSize="18" />
+                    </graphic>
+                </Button>
                 <Button fx:id="navAiSettingsBtn" alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308" onAction="#onNavAiSetting" styleClass="flat" text="AI Setting">
                     <graphic>
                         <FontIcon iconLiteral="mdmz-sentiment_very_satisfied" iconSize="18" />

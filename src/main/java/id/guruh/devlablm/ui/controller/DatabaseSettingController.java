@@ -127,9 +127,8 @@ public class DatabaseSettingController {
                 Platform.runLater(() -> showStatus(
                         ok ? "Koneksi berhasil" : "Koneksi gagal", ok));
             } catch (Exception e) {
-                e.printStackTrace();
-                Platform.runLater(() -> showStatus(
-                        "Koneksi gagal: periksa host, port, database, username, dan password.", false));
+                String errorMsg = e.getMessage() != null ? e.getMessage() : "Unknown error";
+                Platform.runLater(() -> showStatus("Koneksi gagal: " + errorMsg, false));
             }
         }, "pg-test-connection");
         t.setDaemon(true);

@@ -7,6 +7,7 @@ import javafx.beans.property.StringProperty;
 
 public class KnowledgeItem {
 
+    private Long id;
     private final StringProperty fileName = new SimpleStringProperty();
     private final StringProperty fileType = new SimpleStringProperty();
     private final StringProperty fileSize = new SimpleStringProperty();
@@ -16,13 +17,26 @@ public class KnowledgeItem {
 
     public KnowledgeItem() {}
 
-    public KnowledgeItem(String fileName, String fileType, String fileSize, int chunkCount, String uploadedAt, String status) {
+    public KnowledgeItem(Long id, String fileName, String fileType, String fileSize, int chunkCount, String uploadedAt, String status) {
+        this.id = id;
         setFileName(fileName);
         setFileType(fileType);
         setFileSize(fileSize);
         setChunkCount(chunkCount);
         setUploadedAt(uploadedAt);
         setStatus(status);
+    }
+
+    public KnowledgeItem(String fileName, String fileType, String fileSize, int chunkCount, String uploadedAt, String status) {
+        this(null, fileName, fileType, fileSize, chunkCount, uploadedAt, status);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getFileName() {

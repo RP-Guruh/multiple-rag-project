@@ -40,6 +40,7 @@ public class DashboardController {
                     .withZone(ZoneId.systemDefault());
 
     private final ProjectService projectService;
+    private final id.guruh.devlablm.postgres.service.PostgresConnectionService postgresConnectionService;
     private final FxmlViewLoader fxmlViewLoader;
 
     @FXML private ScrollPane scrollPane;
@@ -48,8 +49,12 @@ public class DashboardController {
     private final List<Node> cards = new ArrayList<>();
     private int currentColumns = -1;
 
-    public DashboardController(ProjectService projectService, FxmlViewLoader fxmlViewLoader) {
+    public DashboardController(
+            ProjectService projectService,
+            id.guruh.devlablm.postgres.service.PostgresConnectionService postgresConnectionService,
+            FxmlViewLoader fxmlViewLoader) {
         this.projectService = projectService;
+        this.postgresConnectionService = postgresConnectionService;
         this.fxmlViewLoader = fxmlViewLoader;
     }
 
@@ -64,6 +69,10 @@ public class DashboardController {
         cards.clear();
 
         try {
+            if (!postgresConnectionService.isConnected()) {
+                postgresConnectionService.initConnection();
+            }
+
             List<ProjectEntity> projects = projectService.findAll();
             cards.add(createAddCard());
             for (ProjectEntity p : projects) {
@@ -71,6 +80,8 @@ public class DashboardController {
                 cards.add(createProjectCard(p, created));
             }
         } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(DashboardController.class)
+                    .error("Failed to fetch projects in Dashboard: {}", e.getMessage(), e);
             cards.clear();
             cards.add(createDatabaseNotReadyCard());
         }
@@ -138,14 +149,51 @@ public class DashboardController {
         Label info = new Label(created);
         info.getStyleClass().add("text-muted");
 
-        VBox card = new VBox(6, title, info);
-        card.setAlignment(Pos.CENTER_LEFT);
-        card.setPadding(new Insets(16));
+        org.kordamp.ikonli.javafx.FontIcon deleteIcon = new org.kordamp.ikonli.javafx.FontIcon("mdal-delete_outline");
+        deleteIcon.setIconSize(16);
+
+        javafx.scene.control.Button btnDelete = new javafx.scene.control.Button();
+        btnDelete.setGraphic(deleteIcon);
+        btnDelete.getStyleClass().addAll("button-subtle", "danger");
+        btnDelete.setTooltip(new javafx.scene.control.Tooltip("Delete project"));
+        btnDelete.setOnAction(e -> {
+            e.consume(); // Hindari card terklik/terbuka
+            confirmAndDeleteProject(project);
+        });
+
+        javafx.scene.layout.HBox headerBox = new javafx.scene.layout.HBox(8, title);
+        headerBox.setAlignment(Pos.CENTER_LEFT);
+        javafx.scene.layout.Region spacer = new javafx.scene.layout.Region();
+        javafx.scene.layout.HBox.setHgrow(spacer, Priority.ALWAYS);
+        headerBox.getChildren().addAll(spacer, btnDelete);
+
+        VBox card = new VBox(6, headerBox, info);
+        card.setAlignment(Pos.TOP_LEFT);
+        card.setPadding(new Insets(14, 14, 14, 16));
         card.setPrefHeight(140);
         card.setMaxWidth(Double.MAX_VALUE);
         card.getStyleClass().add("project-card");
         card.setOnMouseClicked(e -> onOpenProject(project));
         return card;
+    }
+
+    private void confirmAndDeleteProject(ProjectEntity project) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Project");
+        alert.setHeaderText("Delete project: " + project.getName() + "?");
+        alert.setContentText("All associated documents, stored files, and vector embeddings will be permanently removed. Continue?");
+        alert.initOwner(cardGrid.getScene().getWindow());
+
+        alert.showAndWait().ifPresent(res -> {
+            if (res == javafx.scene.control.ButtonType.OK) {
+                try {
+                    projectService.delete(project.getId().longValue());
+                    refreshCards();
+                } catch (Exception ex) {
+                    showError("Failed to delete project: " + ex.getMessage());
+                }
+            }
+        });
     }
 
     private void onAddProject() {

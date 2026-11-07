@@ -165,12 +165,13 @@
 
                                 <TableView fx:id="knowledgeTable" prefHeight="230.0">
                                     <columns>
-                                        <TableColumn fx:id="colFileName" prefWidth="240.0" text="Document Name" />
-                                        <TableColumn fx:id="colFileType" prefWidth="80.0" text="Format" />
-                                        <TableColumn fx:id="colFileSize" prefWidth="80.0" text="Size" />
-                                        <TableColumn fx:id="colChunkCount" prefWidth="105.0" text="Vector Chunks" />
-                                        <TableColumn fx:id="colUploadedAt" prefWidth="135.0" text="Uploaded At" />
-                                        <TableColumn fx:id="colStatus" prefWidth="110.0" text="Status" />
+                                        <TableColumn fx:id="colFileName" prefWidth="220.0" text="Document Name" />
+                                        <TableColumn fx:id="colFileType" prefWidth="75.0" text="Format" />
+                                        <TableColumn fx:id="colFileSize" prefWidth="75.0" text="Size" />
+                                        <TableColumn fx:id="colChunkCount" prefWidth="95.0" text="Vector Chunks" />
+                                        <TableColumn fx:id="colUploadedAt" prefWidth="130.0" text="Uploaded At" />
+                                        <TableColumn fx:id="colStatus" prefWidth="95.0" text="Status" />
+                                        <TableColumn fx:id="colAction" prefWidth="70.0" text="Action" />
                                     </columns>
                                 </TableView>
 

@@ -28,7 +28,14 @@ public class PostgresSchemaInitializer {
                 .locations("classpath:db/migration/postgres")
                 .baselineOnMigrate(true)
                 .baselineVersion("0")
+                .validateOnMigrate(false)
                 .load();
+
+        try {
+            flyway.repair();
+        } catch (Exception ex) {
+            log.warn("Flyway repair notice: {}", ex.getMessage());
+        }
 
         flyway.migrate();
         log.info("Migrasi Flyway untuk skema {} berhasil selesai.", targetSchema);

@@ -124,6 +124,38 @@
 }
 
 .prompt-area {
-    -fx-font-family: "JetBrains Mono", "Consolas", monospace;
+    -fx-font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
     -fx-font-size: 13px;
+}
+
+/* ===== Chatbot UI Styles ===== */
+.chat-container {
+    -fx-background-color: transparent;
+}
+
+.chat-bubble-user {
+    -fx-background-color: -color-accent-emphasis;
+    -fx-background-radius: 14 14 2 14;
+    -fx-padding: 10 14 10 14;
+}
+
+.chat-bubble-user .label {
+    -fx-text-fill: -color-fg-emphasis;
+}
+
+.chat-bubble-ai {
+    -fx-background-color: -color-bg-subtle;
+    -fx-border-color: -color-border-default;
+    -fx-border-width: 1;
+    -fx-background-radius: 14 14 14 2;
+    -fx-padding: 10 14 10 14;
+}
+
+.chat-context-badge {
+    -fx-background-color: rgba(99, 102, 241, 0.15);
+    -fx-text-fill: #818cf8;
+    -fx-background-radius: 6;
+    -fx-padding: 2 6 2 6;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
 }

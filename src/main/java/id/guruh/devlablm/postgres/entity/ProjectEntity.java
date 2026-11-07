@@ -11,7 +11,7 @@ import java.time.Instant;
 public class ProjectEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(unique = true, nullable = false)
     private String name;
@@ -30,8 +30,8 @@ public class ProjectEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    public void setId(Integer id) { this.id = id; }
-    public Integer getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getId() { return id; }
 
     public void setName(String name) { this.name = name; }
     public String getName() { return name; }

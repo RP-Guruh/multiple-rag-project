@@ -42,6 +42,9 @@ public class MainLayoutController {
     private Button navDatabaseSettingsBtn;
 
     @FXML
+    private Button navChatBotBtn;
+
+    @FXML
     private Button themeToggleBtn;
 
     private boolean isDarkMode = false;
@@ -76,6 +79,11 @@ public class MainLayoutController {
     }
 
     @FXML
+    public void onNavChatBot() {
+        switchPage("/fxml/chatbot.fxml", navChatBotBtn);
+    }
+
+    @FXML
     public void onNavDatabaseSetting(){ switchPage("/fxml/database-setting.fxml", navDatabaseSettingsBtn); }
 
     @FXML
@@ -99,7 +107,10 @@ public class MainLayoutController {
             onNavAiSetting();
         } else if ("/fxml/settings.fxml".equals(fxmlPath)) {
             onNavSettings();
-        } else {
+        } else if ("/fxml/chatbot.fxml".equals(fxmlPath)) {
+            onNavChatBot();
+        }
+        else {
             onNavDashboard();
         }
     }
@@ -135,7 +146,7 @@ public class MainLayoutController {
     }
 
     private void resetNavStyles() {
-        List<Button> buttons = List.of(navDashboardBtn, navAiSettingsBtn, navSettingsBtn, navDatabaseSettingsBtn);
+        List<Button> buttons = List.of(navDashboardBtn, navAiSettingsBtn, navSettingsBtn, navDatabaseSettingsBtn, navChatBotBtn);
         for (Button btn : buttons) {
             btn.getStyleClass().remove("accent");
         }

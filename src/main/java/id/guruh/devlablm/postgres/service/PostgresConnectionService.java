@@ -34,6 +34,14 @@ public class PostgresConnectionService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
+        initConnection();
+    }
+
+    public synchronized void initConnection() {
+        if (isConnected()) {
+            return;
+        }
+
         Optional<DatabaseSetting> opt = databaseSettingService.load();
         if (opt.isPresent()) {
             DatabaseSetting setting = opt.get();

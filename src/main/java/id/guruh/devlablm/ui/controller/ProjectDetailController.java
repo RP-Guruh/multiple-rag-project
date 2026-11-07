@@ -1,8 +1,11 @@
 package id.guruh.devlablm.ui.controller;
 
 import id.guruh.devlablm.model.KnowledgeItem;
+import id.guruh.devlablm.postgres.entity.DocumentEntity;
 import id.guruh.devlablm.postgres.entity.ProjectEntity;
+import id.guruh.devlablm.postgres.service.DocumentService;
 import id.guruh.devlablm.postgres.service.ProjectService;
+import id.guruh.devlablm.rag.service.RagIngestionPipelineService;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -48,6 +51,8 @@ public class ProjectDetailController {
             DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm", Locale.US);
 
     private final ProjectService projectService;
+    private final DocumentService documentService;
+    private final RagIngestionPipelineService ragPipelineService;
 
     // Header FXML
     @FXML private Label lblHeaderTitle;
@@ -84,6 +89,7 @@ public class ProjectDetailController {
     @FXML private TableColumn<KnowledgeItem, String> colChunkCount;
     @FXML private TableColumn<KnowledgeItem, String> colUploadedAt;
     @FXML private TableColumn<KnowledgeItem, String> colStatus;
+    @FXML private TableColumn<KnowledgeItem, Void> colAction;
     @FXML private Label lblKnowledgeSummary;
 
     // Training Pipeline FXML (Tab 2)
@@ -101,8 +107,10 @@ public class ProjectDetailController {
     private final ObservableList<KnowledgeItem> masterKnowledgeList = FXCollections.observableArrayList();
     private FilteredList<KnowledgeItem> filteredKnowledgeList;
 
-    public ProjectDetailController(ProjectService projectService) {
+    public ProjectDetailController(ProjectService projectService, DocumentService documentService, RagIngestionPipelineService ragPipelineService) {
         this.projectService = projectService;
+        this.documentService = documentService;
+        this.ragPipelineService = ragPipelineService;
     }
 
     @FXML
@@ -123,6 +131,7 @@ public class ProjectDetailController {
             nameField.setText(project.getName());
             descriptionArea.setText(project.getDescription() != null ? project.getDescription() : "");
             systemPromptArea.setText(project.getSystemPrompt() != null ? project.getSystemPrompt() : "");
+            loadProjectDocuments();
         }
     }
 
@@ -185,6 +194,32 @@ public class ProjectDetailController {
             }
         });
 
+        colAction.setCellFactory(col -> new TableCell<>() {
+            private final Button deleteBtn = new Button();
+            {
+                deleteBtn.getStyleClass().addAll("button-subtle", "danger");
+                org.kordamp.ikonli.javafx.FontIcon icon = new org.kordamp.ikonli.javafx.FontIcon("mdal-delete_outline");
+                icon.setIconSize(16);
+                deleteBtn.setGraphic(icon);
+                deleteBtn.setOnAction(event -> {
+                    KnowledgeItem item = getTableView().getItems().get(getIndex());
+                    if (item != null && item.getId() != null) {
+                        onDeleteDocument(item);
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(deleteBtn);
+                }
+            }
+        });
+
         filteredKnowledgeList = new FilteredList<>(masterKnowledgeList, p -> true);
         knowledgeTable.setItems(filteredKnowledgeList);
     }
@@ -218,12 +253,35 @@ public class ProjectDetailController {
     }
 
     private void setupInitialKnowledgeData() {
-        masterKnowledgeList.addAll(
-                new KnowledgeItem("customer-service-guide.pdf", "PDF", "2.4 MB", 184, "06 Nov 2026 10:15", "Trained"),
-                new KnowledgeItem("standard-operating-procedures-2026.docx", "Word", "1.1 MB", 120, "06 Nov 2026 11:20", "Trained"),
-                new KnowledgeItem("product-catalog-and-pricing.xlsx", "Excel", "680 KB", 86, "06 Nov 2026 11:45", "Trained"),
-                new KnowledgeItem("return-policy-and-warranty-faq.txt", "Text", "145 KB", 38, "06 Nov 2026 13:00", "Trained")
-        );
+        // Akan di-load berdasarkan project aktif di loadProjectDocuments()
+    }
+
+    private void loadProjectDocuments() {
+        masterKnowledgeList.clear();
+        if (currentProject == null || currentProject.getId() == null) {
+            updateSummaryLabel();
+            return;
+        }
+
+        try {
+            List<DocumentEntity> docs = documentService.findByProjectId(currentProject.getId());
+            for (DocumentEntity doc : docs) {
+                String uploadedAtStr = doc.getCreatedAt() != null
+                        ? DATE_FMT.format(LocalDateTime.ofInstant(doc.getCreatedAt(), java.time.ZoneId.systemDefault()))
+                        : "-";
+                masterKnowledgeList.add(new KnowledgeItem(
+                        doc.getId(),
+                        doc.getFileName(),
+                        doc.getFileType() != null ? doc.getFileType().toUpperCase() : "DOC",
+                        formatFileSize(doc.getFileSize() != null ? doc.getFileSize() : 0L),
+                        doc.getChunkCount() != null ? doc.getChunkCount() : 0,
+                        uploadedAtStr,
+                        doc.getStatus()
+                ));
+            }
+        } catch (Exception ex) {
+            appendLog("[DATABASE ERROR] Gagal memuat daftar dokumen: " + ex.getMessage());
+        }
         updateSummaryLabel();
     }
 
@@ -298,32 +356,77 @@ public class ProjectDetailController {
             return;
         }
 
-        String now = LocalDateTime.now().format(DATE_FMT);
-        int addedCount = 0;
-
-        for (File f : new ArrayList<>(pendingFiles)) {
-            String name = f.getName();
-            String type = detectFileType(name);
-            String sizeStr = formatFileSize(f.length());
-            int estimatedChunks = Math.max(1, (int) (f.length() / 1024));
-
-            masterKnowledgeList.add(0, new KnowledgeItem(name, type, sizeStr, estimatedChunks, now, "Ready"));
-            appendLog("[UPLOAD SUCCESS] Uploaded: " + name + " (" + type + ", " + sizeStr + ") -> " + estimatedChunks + " chunks ready for indexing.");
-            addedCount++;
+        if (currentProject == null || currentProject.getId() == null) {
+            lblUploadFeedback.setText("Save the project before uploading documents.");
+            return;
         }
 
-        pendingFiles.clear();
-        refreshQueueView();
-        lblUploadFeedback.setText(addedCount + " document(s) added to knowledge base.");
-        updateSummaryLabel();
+        btnUploadQueue.setDisable(true);
+        lblUploadFeedback.setText("Uploading documents...");
+
+        List<File> filesToUpload = new ArrayList<>(pendingFiles);
+
+        new Thread(() -> {
+            int successCount = 0;
+            List<String> errors = new ArrayList<>();
+
+            for (File f : filesToUpload) {
+                try {
+                    DocumentEntity doc = documentService.uploadDocument(currentProject.getId(), f);
+                    successCount++;
+                    Platform.runLater(() -> {
+                        appendLog("[UPLOAD SUCCESS] Saved: " + doc.getFileName() + " -> " + doc.getFilePath());
+                    });
+                } catch (Exception ex) {
+                    errors.add(f.getName() + " (" + ex.getMessage() + ")");
+                    Platform.runLater(() -> {
+                        appendLog("[UPLOAD ERROR] Failed to upload " + f.getName() + ": " + ex.getMessage());
+                    });
+                }
+            }
+
+            final int finalSuccess = successCount;
+            Platform.runLater(() -> {
+                btnUploadQueue.setDisable(false);
+                pendingFiles.clear();
+                refreshQueueView();
+                loadProjectDocuments();
+
+                if (errors.isEmpty()) {
+                    lblUploadFeedback.setText(finalSuccess + " document(s) uploaded successfully.");
+                } else {
+                    lblUploadFeedback.setText(finalSuccess + " uploaded, " + errors.size() + " failed.");
+                }
+            });
+        }).start();
+    }
+
+    private void onDeleteDocument(KnowledgeItem item) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Document");
+        alert.setHeaderText("Delete: " + item.getFileName());
+        alert.setContentText("This removes the file from disk and deletes its database records. Continue?");
+        alert.initOwner(knowledgeTable.getScene().getWindow());
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == javafx.scene.control.ButtonType.OK) {
+                try {
+                    documentService.deleteDocument(item.getId());
+                    loadProjectDocuments();
+                    appendLog("[DELETE] Document '" + item.getFileName() + "' deleted.");
+                } catch (Exception ex) {
+                    appendLog("[ERROR] Failed to delete document: " + ex.getMessage());
+                }
+            }
+        });
     }
 
     @FXML
     public void onRefreshTable() {
         searchDocField.clear();
         typeFilterCombo.getSelectionModel().selectFirst();
-        updateSummaryLabel();
-        appendLog("[KNOWLEDGE] Document table refreshed.");
+        loadProjectDocuments();
+        appendLog("[KNOWLEDGE] Document table refreshed from database.");
     }
 
     @FXML
@@ -362,9 +465,14 @@ public class ProjectDetailController {
 
     @FXML
     public void onStartTraining() {
-        mainTabPane.getSelectionModel().select(1);
+        if (currentProject == null || currentProject.getId() == null) {
+            appendLog("[ERROR] Project must be saved before starting training.");
+            return;
+        }
 
+        mainTabPane.getSelectionModel().select(1);
         btnTabStartTraining.setDisable(true);
+        if (btnHeaderTrain != null) btnHeaderTrain.setDisable(true);
 
         lblTrainingStatusBadge.setText("Processing...");
         lblTrainingStatusBadge.getStyleClass().removeAll("badge-status-trained", "badge-status-pending");
@@ -373,51 +481,52 @@ public class ProjectDetailController {
         lblTrainingPercent.setText("0%");
 
         appendLog("\n==================== STARTING EMBEDDING & INDEXING PIPELINE ====================");
-        appendLog("[STEP 1/5] Scanning " + masterKnowledgeList.size() + " knowledge base documents...");
 
-        Timeline timeline = new Timeline();
-        timeline.getKeyFrames().addAll(
-                new KeyFrame(Duration.millis(600), e -> {
-                    trainingProgressBar.setProgress(0.20);
-                    lblTrainingPercent.setText("20%");
-                    appendLog("[STEP 2/5] Extracting document text (PDF, Word, Excel, Text)... OK");
-                }),
-                new KeyFrame(Duration.millis(1300), e -> {
-                    trainingProgressBar.setProgress(0.45);
-                    lblTrainingPercent.setText("45%");
-                    appendLog("[STEP 3/5] Chunking content into semantic segments (428 total chunks)... OK");
-                }),
-                new KeyFrame(Duration.millis(2100), e -> {
-                    trainingProgressBar.setProgress(0.75);
-                    lblTrainingPercent.setText("75%");
-                    appendLog("[STEP 4/5] Computing 1536-dimensional embeddings with text-embedding-3-small... OK");
-                }),
-                new KeyFrame(Duration.millis(3000), e -> {
-                    trainingProgressBar.setProgress(1.0);
-                    lblTrainingPercent.setText("100%");
+        new Thread(() -> {
+            try {
+                ragPipelineService.trainProjectKnowledge(
+                        currentProject.getId(),
+                        progress -> Platform.runLater(() -> {
+                            trainingProgressBar.setProgress(progress);
+                            lblTrainingPercent.setText((int) (progress * 100) + "%");
+                        }),
+                        logMsg -> Platform.runLater(() -> appendLog(logMsg))
+                );
+
+                Platform.runLater(() -> {
                     lblTrainingStatusBadge.setText("Active");
                     lblTrainingStatusBadge.getStyleClass().removeAll("badge-status-ready", "badge-status-pending");
                     lblTrainingStatusBadge.getStyleClass().add("badge-status-trained");
-
-                    for (KnowledgeItem item : masterKnowledgeList) {
-                        item.setStatus("Trained");
-                    }
-                    knowledgeTable.refresh();
-
-                    appendLog("[STEP 5/5] Updated pgvector index (HNSW / IVFFlat) in PostgreSQL.");
-                    appendLog("[COMPLETED] Knowledge base indexing complete. Vector retrieval ready.");
-                    appendLog("=================================================================================\n");
-
                     btnTabStartTraining.setDisable(false);
+                    if (btnHeaderTrain != null) btnHeaderTrain.setDisable(false);
+
+                    loadProjectDocuments();
 
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Indexing Complete");
-                    alert.setHeaderText("Knowledge Base Indexing Successful");
-                    alert.setContentText("All documents have been extracted, chunked, embedded, and stored in pgvector.");
+                    alert.setTitle("Training Complete");
+                    alert.setHeaderText("Knowledge Base Indexed");
+                    alert.setContentText("All documents have been extracted, chunked, and saved to pgvector.");
+                    alert.initOwner(mainTabPane.getScene().getWindow());
                     alert.show();
-                })
-        );
-        timeline.play();
+                });
+            } catch (Exception ex) {
+                Platform.runLater(() -> {
+                    lblTrainingStatusBadge.setText("Failed");
+                    lblTrainingStatusBadge.getStyleClass().removeAll("badge-status-ready", "badge-status-trained");
+                    lblTrainingStatusBadge.getStyleClass().add("badge-status-pending");
+                    btnTabStartTraining.setDisable(false);
+                    if (btnHeaderTrain != null) btnHeaderTrain.setDisable(false);
+                    appendLog("[PIPELINE ERROR] " + ex.getMessage());
+
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Training Failed");
+                    alert.setHeaderText("Pipeline Failure");
+                    alert.setContentText(ex.getMessage());
+                    alert.initOwner(mainTabPane.getScene().getWindow());
+                    alert.show();
+                });
+            }
+        }).start();
     }
 
     @FXML

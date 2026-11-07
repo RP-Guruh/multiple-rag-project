@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox spacing="14.0" style="-fx-background-color: -color-bg-default;"
+      xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="id.guruh.devlablm.ui.controller.ChatbotController">
+    <padding>
+        <Insets bottom="16.0" left="20.0" right="20.0" top="16.0" />
+    </padding>
+
+    <!-- Top Header & Project Selector (Strict Knowledge Isolation) -->
+    <HBox alignment="CENTER_LEFT" spacing="14.0" styleClass="detail-card">
+        <FontIcon iconLiteral="mdmz-sentiment_very_satisfied" iconSize="28" />
+        <VBox spacing="2.0">
+            <Label styleClass="title-3, text-bold" text="Chatbot Playground" />
+            <Label styleClass="text-muted, text-small" text="Interact with your AI model using isolated project knowledge." />
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" />
+
+        <!-- Project Isolation Selector -->
+        <HBox alignment="CENTER_LEFT" spacing="8.0">
+            <Label styleClass="text-bold" text="Target Project:" />
+            <ComboBox fx:id="projectComboBox" prefWidth="220.0" promptText="Select a project..." />
+            <Button fx:id="btnRefreshProjects" onAction="#onRefreshProjects" styleClass="button-subtle">
+                <graphic>
+                    <FontIcon iconLiteral="mdmz-refresh" iconSize="16" />
+                </graphic>
+            </Button>
+        </HBox>
+    </HBox>
+
+    <!-- Chat Messages Scroll Container -->
+    <ScrollPane fx:id="chatScrollPane" fitToWidth="true" style="-fx-background-color: transparent;" VBox.vgrow="ALWAYS">
+        <VBox fx:id="messageContainer" spacing="12.0" styleClass="chat-container">
+            <padding>
+                <Insets bottom="12.0" left="8.0" right="8.0" top="8.0" />
+            </padding>
+        </VBox>
+    </ScrollPane>
+
+    <!-- Context Preview / Notice Strip -->
+    <HBox alignment="CENTER_LEFT" spacing="10.0">
+        <Label fx:id="lblChatStatus" styleClass="text-muted, text-small" text="Select a project above to start conversation." />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button fx:id="btnClearChat" onAction="#onClearChat" styleClass="button-subtle, danger" text="Clear Chat">
+            <graphic>
+                <FontIcon iconLiteral="mdal-delete_outline" iconSize="14" />
+            </graphic>
+        </Button>
+    </HBox>
+
+    <!-- Chat Input Area -->
+    <HBox alignment="CENTER_LEFT" spacing="10.0">
+        <TextArea fx:id="chatInputField" onKeyPressed="#onInputKeyPressed" prefRowCount="2"
+                  promptText="Ask a question based on the selected project's knowledge base... (Press Enter to send, Shift+Enter for new line)"
+                  wrapText="true" HBox.hgrow="ALWAYS" />
+        <Button fx:id="btnSendMessage" onAction="#onSendMessage" prefHeight="54.0" prefWidth="100.0" styleClass="accent" text="Send">
+            <graphic>
+                <FontIcon iconLiteral="mdmz-send" iconSize="16" />
+            </graphic>
+        </Button>
+    </HBox>
+</VBox>

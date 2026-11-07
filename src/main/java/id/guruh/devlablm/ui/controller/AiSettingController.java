@@ -35,8 +35,12 @@ public class AiSettingController {
         // Isi form dari data yang sudah tersimpan di SQLite
         aiSettingService.load().ifPresent(s -> {
             aiURL.setText(s.getAiUrl());
-            aiToken.setText(s.getAiKey());
             modelName.setText(s.getModelName());
+            try {
+                aiToken.setText(aiSettingService.decryptPassword(s));
+            } catch (IllegalStateException e) {
+                showStatus("Password tersimpan tidak bisa dibaca, silakan isi ulang.", false);
+            }
         });
 
         // Bersihkan pesan status saat pengguna mengubah input
