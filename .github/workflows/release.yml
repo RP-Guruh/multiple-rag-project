@@ -28,17 +28,24 @@ jobs:
         run: ./mvnw clean package -DskipTests
         shell: bash
 
+      - name: Inspect Built JAR
+        run: ls -la target/
+        shell: bash
+
       - name: Package .deb with jpackage
         run: |
           sudo apt-get update && sudo apt-get install -y fakeroot
+          JAR_FILE=$(ls target/*.jar | grep -v 'original' | head -n 1)
+          JAR_NAME=$(basename "$JAR_FILE")
+          echo "Found JAR: $JAR_NAME"
           jpackage \
             --input target/ \
             --name devlablm \
-            --main-jar devlablm-0.0.1-SNAPSHOT.jar \
+            --main-jar "$JAR_NAME" \
             --main-class id.guruh.devlablm.DevlablmApplication \
             --type deb \
             --dest dist/ \
-            --app-version 1.0.0 \
+            --app-version 1.0.1 \
             --vendor "Guruh" \
             --description "DevLab LM Studio - Multi-Project RAG Platform" \
             --java-options "--sun-misc-unsafe-memory-access=allow"
@@ -70,20 +77,22 @@ jobs:
 
       - name: Package .exe with jpackage
         run: |
+          $jar = Get-ChildItem target\*.jar | Where-Object { $_.Name -notlike "*original*" } | Select-Object -First 1
+          Write-Host "Found JAR: $($jar.Name)"
           jpackage `
-            --input target/ `
+            --input target\ `
             --name devlablm `
-            --main-jar devlablm-0.0.1-SNAPSHOT.jar `
+            --main-jar $($jar.Name) `
             --main-class id.guruh.devlablm.DevlablmApplication `
             --type exe `
-            --dest dist/ `
-            --app-version 1.0.0 `
+            --dest dist\ `
+            --app-version 1.0.1 `
             --vendor "Guruh" `
             --description "DevLab LM Studio - Multi-Project RAG Platform" `
             --win-dir-chooser `
             --win-shortcut `
             --java-options "--sun-misc-unsafe-memory-access=allow"
-          Move-Item -Path dist/*.exe -Destination dist/devlablm-windows-x64.exe
+          Move-Item -Path dist\*.exe -Destination dist\devlablm-windows-x64.exe
         shell: powershell
 
       - name: Upload Windows Artifact

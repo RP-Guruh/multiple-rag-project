@@ -71,12 +71,18 @@ public class DocumentParserService {
 
     private String extractPdfWithVisionFallback(File file) throws Exception {
         try (PDDocument document = Loader.loadPDF(file)) {
+            // 1. First attempt: Coordinate-based spatial sorting extraction
+            // This preserves horizontal alignment so item names and prices in multi-column menus stay together
             PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setSortByPosition(true);
+            stripper.setLineSeparator("\n");
+            stripper.setWordSeparator(" ");
             String directText = stripper.getText(document);
 
-            // If text layer exists and has substantial characters, return directly
+            // If text layer exists and has substantial characters, return spatial-sorted text
             if (directText != null && directText.strip().length() > SCANNED_PDF_CHAR_THRESHOLD) {
-                log.info("PDF '{}' contains digital text layer ({} chars).", file.getName(), directText.strip().length());
+                log.info("PDF '{}' contains digital text layer ({} chars). Extracted using coordinate spatial sorting.",
+                        file.getName(), directText.strip().length());
                 return directText.strip();
             }
 

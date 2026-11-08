@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -40,7 +41,7 @@ public class RagRetrievalService {
         String vectorStr = toVectorString(queryEmbeddings.get(0));
 
         // 2. Hybrid Search (Vector Cosine Distance OR Keyword Fallback via ILIKE)
-        // This ensures exact product names/prices (like "jus alpukat") are never missed by vector distance thresholding.
+        // Clean query into core keywords (e.g. "berapa harga jus alpukat" -> matches "jus" AND "alpukat")
         String sql = """
             SELECT id, document_id, content,
                    1 - (embedding <=> ?::vector) AS similarity
@@ -49,13 +50,25 @@ public class RagRetrievalService {
               AND (
                   (embedding IS NOT NULL AND (1 - (embedding <=> ?::vector)) >= ?)
                   OR content ILIKE ?
+                  OR content ILIKE ?
               )
             ORDER BY
-              CASE WHEN content ILIKE ? THEN 1.0 ELSE (1 - (embedding <=> ?::vector)) END DESC
+              CASE 
+                WHEN content ILIKE ? THEN 1.0 
+                WHEN content ILIKE ? THEN 0.8
+                ELSE (1 - (embedding <=> ?::vector)) 
+              END DESC
             LIMIT ?
         """;
 
-        String keywordPattern = "%" + query.trim().replaceAll("\\s+", "%") + "%";
+        String fullPhrasePattern = "%" + query.trim().replaceAll("\\s+", "%") + "%";
+        // Extract substantive nouns (words with length > 2)
+        String[] words = query.trim().split("\\s+");
+        String substantiveWords = Arrays.stream(words)
+                .filter(w -> !List.of("berapa", "harga", "apa", "siapa", "dimana", "kapan", "adakah", "ada", "yang", "dan", "di", "ke").contains(w.toLowerCase()))
+                .reduce((a, b) -> a + "%" + b)
+                .orElse(query.trim());
+        String substantivePattern = "%" + substantiveWords + "%";
 
         return jdbcTemplate.query(
                 sql,
@@ -65,8 +78,8 @@ public class RagRetrievalService {
                         rs.getString("content"),
                         Math.max(0.0, rs.getDouble("similarity"))
                 ),
-                vectorStr, projectId, vectorStr, minSimilarity, keywordPattern,
-                keywordPattern, vectorStr, topK
+                vectorStr, projectId, vectorStr, minSimilarity, fullPhrasePattern, substantivePattern,
+                fullPhrasePattern, substantivePattern, vectorStr, topK
         );
     }
 

@@ -8,8 +8,8 @@ import java.util.List;
 @Service
 public class TextChunkerService {
 
-    private static final int DEFAULT_CHUNK_SIZE = 800; // characters
-    private static final int DEFAULT_CHUNK_OVERLAP = 120; // characters
+    private static final int DEFAULT_CHUNK_SIZE = 1200; // characters (wider window preserves multi-column items and prices)
+    private static final int DEFAULT_CHUNK_OVERLAP = 250; // characters (ensures table boundaries don't cut items off)
 
     public record Chunk(int index, String text, int tokenCount) {}
 

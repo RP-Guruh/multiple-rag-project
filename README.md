@@ -46,9 +46,11 @@ DevLabLM provides a native desktop interface for document ingestion, multimodal 
 | **Desktop UI** | JavaFX 23, AtlantaFX 2.0, Ikonli 12.4 | Modern desktop interface, CSS theming, reactive event bus. |
 | **Document Extraction** | Apache PDFBox 3.0.3, Apache POI 5.3.0 | PDF text stripping, Word docx paragraph parser, Excel tabular sheet extractor. |
 | **Multimodal Vision OCR** | Ollama (`llava`) / OpenAI Vision | Renders scanned PDF pages to 150 DPI JPEG and transcribes text verbatim via Vision LLM. |
-| **Chunking Engine** | Custom Recursive Chunker | Split threshold 500-800 characters with 100-120 overlap, splitting on natural breaks (`\n\n`, `. `, `? `, `! `, `\n`). |
+| **Chunking Engine** | Custom Recursive Chunker | Split threshold 1200 characters with 250 overlap, splitting on natural breaks (`\n\n`, `. `, `? `, `! `, `\n`). |
 | **Embedding Client** | Java HTTP Client (HTTP/2) | Primary OpenAI-compatible endpoint with automatic fallback to local Ollama (`nomic-embed-text`, 768 dim). |
 | **Vector Database** | PostgreSQL + `pgvector` | HNSW cosine similarity index (`vector_cosine_ops`), managed dynamically via Flyway migrations. |
+| **Retrieval Engine** | Hybrid Vector + Keyword Search | Cosine similarity combined with exact substantive keyword matching (`ILIKE`) to guarantee high-precision menu/pricing retrieval. |
+| **Rich Chat Formatter** | JavaFX TextFlow Markdown Engine | Native bolding and styling without exposing raw markdown asterisks (`**`). |
 | **Metadata Storage** | SQLite (`data/app.db`) | Stores application configuration, encrypted API tokens, and database credentials locally. |
 
 ---
@@ -94,7 +96,7 @@ sequenceDiagram
     end
 
     Worker->>DB: UPDATE documents SET status='CHUNKING'
-    Worker->>TC: splitIntoChunks(text, 800, 120)
+    Worker->>TC: splitIntoChunks(text, 1200, 250)
     TC-->>Worker: List<Chunk> (text segments + token counts)
 
     Worker->>DB: UPDATE documents SET status='EMBEDDING'
