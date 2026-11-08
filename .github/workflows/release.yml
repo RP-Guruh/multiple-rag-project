@@ -42,16 +42,16 @@ jobs:
             --input target/ \
             --name "rag-studio" \
             --main-jar "$JAR_NAME" \
-            --main-class id.guruh.devlablm.DevlablmApplication \
+            --main-class org.springframework.boot.loader.launch.JarLauncher \
             --type deb \
             --dest dist/ \
-            --app-version 1.0.2 \
+            --app-version 1.0.3 \
             --vendor "Guruh" \
             --description "RAG Studio - Multi-Project AI Knowledge Platform" \
             --icon src/main/resources/icons/icon.png \
             --linux-shortcut \
             --linux-menu-group "Development;Utility;" \
-            --java-options "--sun-misc-unsafe-memory-access=allow"
+            --jlink-options "--strip-debug --no-header-files --no-man-pages --strip-native-commands"
           mv dist/*.deb dist/rag-studio-linux-x86_64.deb
 
       - name: Upload Linux Artifact
@@ -86,10 +86,10 @@ jobs:
             --input target\ `
             --name "RAG-Studio" `
             --main-jar $($jar.Name) `
-            --main-class id.guruh.devlablm.DevlablmApplication `
+            --main-class org.springframework.boot.loader.launch.JarLauncher `
             --type exe `
             --dest dist\ `
-            --app-version 1.0.2 `
+            --app-version 1.0.3 `
             --vendor "Guruh" `
             --description "RAG Studio - Multi-Project AI Knowledge Platform" `
             --icon src\main\resources\icons\icon.ico `
@@ -97,7 +97,7 @@ jobs:
             --win-shortcut `
             --win-menu `
             --win-menu-group "RAG Studio" `
-            --java-options "--sun-misc-unsafe-memory-access=allow"
+            --jlink-options "--strip-debug --no-header-files --no-man-pages --strip-native-commands"
           Move-Item -Path dist\*.exe -Destination dist/RAG-Studio-windows-x64.exe
         shell: powershell
 
