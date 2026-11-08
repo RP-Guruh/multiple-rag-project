@@ -40,22 +40,25 @@ jobs:
           echo "Found JAR: $JAR_NAME"
           jpackage \
             --input target/ \
-            --name devlablm \
+            --name "rag-studio" \
             --main-jar "$JAR_NAME" \
             --main-class id.guruh.devlablm.DevlablmApplication \
             --type deb \
             --dest dist/ \
-            --app-version 1.0.1 \
+            --app-version 1.0.2 \
             --vendor "Guruh" \
-            --description "DevLab LM Studio - Multi-Project RAG Platform" \
+            --description "RAG Studio - Multi-Project AI Knowledge Platform" \
+            --icon src/main/resources/icons/icon.png \
+            --linux-shortcut \
+            --linux-menu-group "Development;Utility;" \
             --java-options "--sun-misc-unsafe-memory-access=allow"
-          mv dist/*.deb dist/devlablm-linux-x86_64.deb
+          mv dist/*.deb dist/rag-studio-linux-x86_64.deb
 
       - name: Upload Linux Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: devlablm-linux-deb
-          path: dist/devlablm-linux-x86_64.deb
+          name: rag-studio-linux-deb
+          path: dist/rag-studio-linux-x86_64.deb
 
   build-windows:
     name: Build Windows .exe
@@ -81,25 +84,28 @@ jobs:
           Write-Host "Found JAR: $($jar.Name)"
           jpackage `
             --input target\ `
-            --name devlablm `
+            --name "RAG-Studio" `
             --main-jar $($jar.Name) `
             --main-class id.guruh.devlablm.DevlablmApplication `
             --type exe `
             --dest dist\ `
-            --app-version 1.0.1 `
+            --app-version 1.0.2 `
             --vendor "Guruh" `
-            --description "DevLab LM Studio - Multi-Project RAG Platform" `
+            --description "RAG Studio - Multi-Project AI Knowledge Platform" `
+            --icon src\main\resources\icons\icon.ico `
             --win-dir-chooser `
             --win-shortcut `
+            --win-menu `
+            --win-menu-group "RAG Studio" `
             --java-options "--sun-misc-unsafe-memory-access=allow"
-          Move-Item -Path dist\*.exe -Destination dist\devlablm-windows-x64.exe
+          Move-Item -Path dist\*.exe -Destination dist/RAG-Studio-windows-x64.exe
         shell: powershell
 
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: devlablm-windows-exe
-          path: dist/devlablm-windows-x64.exe
+          name: RAG-Studio-windows-exe
+          path: dist/RAG-Studio-windows-x64.exe
 
   publish-release:
     name: Publish GitHub Release
@@ -110,13 +116,13 @@ jobs:
       - name: Download Linux Artifact
         uses: actions/download-artifact@v4
         with:
-          name: devlablm-linux-deb
+          name: rag-studio-linux-deb
           path: release-files/
 
       - name: Download Windows Artifact
         uses: actions/download-artifact@v4
         with:
-          name: devlablm-windows-exe
+          name: RAG-Studio-windows-exe
           path: release-files/
 
       - name: Create GitHub Release

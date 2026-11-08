@@ -18,7 +18,7 @@
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                     <children>
                         <FontIcon iconLiteral="mdal-desktop_mac" iconSize="26" />
-                        <Label styleClass="title-4" text="DevLab LM" />
+                        <Label styleClass="title-4" text="RAG Studio" />
                     </children>
                     <VBox.margin>
                         <Insets bottom="10.0" />

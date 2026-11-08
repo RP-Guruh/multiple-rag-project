@@ -1,8 +1,8 @@
-# DevLabLM — Multi-Project RAG Studio
+# RAG Studio — Multi-Project AI Platform
 
 A local, project-isolated Retrieval-Augmented Generation (RAG) studio and inference engine built on **Java 21/25**, **Spring Boot 4**, **JavaFX 23**, and **PostgreSQL (`pgvector`)**.
 
-DevLabLM provides a native desktop interface for document ingestion, multimodal vision OCR fallback, text chunking, vector embedding, and real-time chat evaluation with strict knowledge boundaries per project.
+RAG Studio provides a native desktop interface for document ingestion, multimodal vision OCR fallback, coordinate-sorted text extraction, text chunking, vector embedding, and real-time chat evaluation with strict knowledge boundaries per project.
 
 ---
 
@@ -43,7 +43,7 @@ DevLabLM provides a native desktop interface for document ingestion, multimodal 
 | Layer | Component | Implementation |
 |---|---|---|
 | **Runtime & Core** | Java 21/25, Spring Boot 4.1.2 | Dependency injection, application lifecycle bridge, embedded web container. |
-| **Desktop UI** | JavaFX 23, AtlantaFX 2.0, Ikonli 12.4 | Modern desktop interface, CSS theming, reactive event bus. |
+| **Desktop UI** | JavaFX 23, AtlantaFX 2.0, Ikonli 12.4 | Modern desktop interface, custom AI vector branding, reactive event bus. |
 | **Document Extraction** | Apache PDFBox 3.0.3, Apache POI 5.3.0 | PDF text stripping, Word docx paragraph parser, Excel tabular sheet extractor. |
 | **Multimodal Vision OCR** | Ollama (`llava`) / OpenAI Vision | Renders scanned PDF pages to 150 DPI JPEG and transcribes text verbatim via Vision LLM. |
 | **Chunking Engine** | Custom Recursive Chunker | Split threshold 1200 characters with 250 overlap, splitting on natural breaks (`\n\n`, `. `, `? `, `! `, `\n`). |

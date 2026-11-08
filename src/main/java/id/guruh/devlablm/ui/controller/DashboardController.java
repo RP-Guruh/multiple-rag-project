@@ -234,7 +234,13 @@ public class DashboardController {
                 scene.getStylesheets().add(cssUrl);
             }
 
-            stage.setTitle("DevLab LM Studio - Project: " + project.getName());
+            stage.setTitle("RAG Studio - Project: " + project.getName());
+            try {
+                var iconStream = getClass().getResourceAsStream("/icons/icon.png");
+                if (iconStream != null) {
+                    stage.getIcons().add(new javafx.scene.image.Image(iconStream));
+                }
+            } catch (Exception ignored) {}
             stage.setMinWidth(960);
             stage.setMinHeight(640);
             stage.setScene(scene);

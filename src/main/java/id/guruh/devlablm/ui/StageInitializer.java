@@ -35,7 +35,14 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
 
         hotReloadService.init(stage, scene);
 
-        stage.setTitle("DevLab LM Studio - Train Your AI, Serve Your Customers");
+        try {
+            var iconStream = getClass().getResourceAsStream("/icons/icon.png");
+            if (iconStream != null) {
+                stage.getIcons().add(new javafx.scene.image.Image(iconStream));
+            }
+        } catch (Exception ignored) {}
+
+        stage.setTitle("RAG Studio - Train Your AI, Serve Your Customers");
         stage.setMinWidth(960);
         stage.setMinHeight(600);
         stage.setScene(scene);
